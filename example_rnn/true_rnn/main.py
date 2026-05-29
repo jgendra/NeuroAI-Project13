@@ -2,10 +2,10 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 import matplotlib.pyplot as plt
-from dynRNN import DynRNN
+from example_rnn.true_rnn.trueRNN import TrueRNN
 
 # Define task directory
-dir = "dynrnn/"
+dir = "true_rnn/"
 
 # hyperparameters
 BATCH_SIZE = 1   # not really used here, since we train on a single trajectory
@@ -26,7 +26,7 @@ if __name__ == "__main__":
     y_true = y_true.to(device)
 
     # Create RNN
-    model = DynRNN(dim=dim, system=system).to(device)
+    model = TrueRNN(dim=dim, system=system).to(device)
 
     # Optimizer and loss
     optimizer = optim.Adam(model.parameters(), lr=LEARNING_RATE)  # create the optimizer
@@ -42,20 +42,11 @@ if __name__ == "__main__":
         model.train()
         optimizer.zero_grad()
 
-        loss = 0.0
-
-        # Loop over the whole timeseries
-        # Teacher forcing: use true state at t as input to predict state at t+1
-        for t in range(n_timesteps - 1):
-            x_t = y_true[t]       # shape: (dim,)
-            target = y_true[t+1]  # next state
-
-            pred = model(x_t)     # predict next state
-
-            loss += loss_function(pred, target)
-
-        # Optionally normalize by number of steps
-        loss = loss / (n_timesteps - 1)
+        # Teacher forcing over the full sequence: predict x_{t+1} from x_t
+        x_in = y_true[:-1]
+        target = y_true[1:]
+        pred, _ = model(x_in)
+        loss = loss_function(pred, target)
 
         # Backpropagate once after summing over all timesteps
         loss.backward()
@@ -97,8 +88,10 @@ if __name__ == "__main__":
         y_pred[0] = y_true[0]
 
         # always feed prediction at n-1 as input to predict state at n
+        h = None
         for t in range(n_timesteps - 1):
-            y_pred[t+1] = model(y_pred[t])
+            step_pred, h = model(y_pred[t], h0=h)
+            y_pred[t+1] = step_pred
 
         mse_eval = loss_function(y_pred, y_true).item()
         print(f"Evaluation MSE over full trajectory: {mse_eval:.6e}")
