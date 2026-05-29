@@ -11,7 +11,7 @@ Integrated Information Decomposition (ΦID).
 > *Project 12: Quantifying Information Flow in Recurrent Neural Networks*.
 
 ![status](https://img.shields.io/badge/status-in%20progress-yellow)
-![python](https://img.shields.io/badge/python-3.10+-blue)
+![python](https://img.shields.io/badge/python-3.12-blue)
 ![framework](https://img.shields.io/badge/framework-PyTorch-ee4c2c)
 
 ---
