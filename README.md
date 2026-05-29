@@ -7,7 +7,7 @@ A controlled methods-and-mechanisms study of how different normative training pr
 **redundancy ↔ synergy** axis, measured with Partial Information Decomposition (PID) and
 Integrated Information Decomposition (ΦID).
 
-> Course project for **NeuroAI & ML 4 Neuro** (Sommersemester 2026, TUM) — based on
+> Course project for **NeuroAI and Machine Learning in Neuroscience (Sommersemester 2026, TUM)** — based on
 > *Project 12: Quantifying Information Flow in Recurrent Neural Networks*.
 
 ![status](https://img.shields.io/badge/status-in%20progress-yellow)
@@ -150,11 +150,11 @@ Key dates: final roadmap **8 June**, midway presentation **17 June**, final pres
 
 ## Team
 
-Group project (3 members), NeuroAI & ML 4 Neuro:
+Group project (3 members):
 
-- Jan Gendra
-- *[Teammate 2]*
-- *[Teammate 3]*
+- Jan Casas Gendra
+- Jean-Pasqual Sindermann
+- Wang Chak Ip
 
 ## References
 
@@ -172,5 +172,5 @@ Group project (3 members), NeuroAI & ML 4 Neuro:
 
 ## Acknowledgements
 
-Developed for the NeuroAI & ML 4 Neuro course (Computational Neuroscience, TUM) taught by
+Developed for the NeuroAI & ML in Neuroscience course (Computational Neuroscience, TUM) taught by
 Prof. Dr. Julijana Gjorgjieva and the teaching team.
