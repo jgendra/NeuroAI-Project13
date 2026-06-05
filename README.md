@@ -148,14 +148,6 @@ python -m src.stats.run_tests --metrics results/metrics/
 Planning and progress are tracked on the repo's **Projects** tab (Roadmap / Board / Table views).
 Key dates: final roadmap **8 June**, midway presentation **17 June**, final presentation **15 July 2026**.
 
-## Team
-
-Group project (3 members):
-
-- Jan Casas Gendra
-- Jean-Pasqual Sindermann
-- Wang Chak Ip
-
 ## References
 
 - Williams & Beer (2010), *Nonnegative Decomposition of Multivariate Information* — [arXiv:1004.2515](https://doi.org/10.48550/arXiv.1004.2515)
