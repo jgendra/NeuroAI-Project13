@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 from example_rnn.true_rnn.trueRNN import TrueRNN
 
 # Define task directory
-dir = "true_rnn/"
+dir = "example_rnn/true_rnn/"
 
 # hyperparameters
 BATCH_SIZE = 1   # not really used here, since we train on a single trajectory

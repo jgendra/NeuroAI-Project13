@@ -5,24 +5,25 @@ import matplotlib.pyplot as plt
 from example_rnn.dyn_rnn.dynRNN import DynRNN
 
 # Define task directory
-dir = "dynrnn/"
+dir = "example_rnn/dyn_rnn/"
 
 # hyperparameters
 BATCH_SIZE = 1   # not really used here, since we train on a single trajectory
-EPOCHS = 1000   
+EPOCHS = 100   
 LEARNING_RATE = 1e-3
 
 # Choose dynamical system
-system = 'Lorenz'  # 'VanDerPol' or 'Lorenz'
+system = 'VanDerPol'  # 'VanDerPol' or 'Lorenz'
 
 if __name__ == "__main__":
 
     y_true = torch.load(f'{dir}y_{system}.pt', weights_only=True)  # Size (300, 2) or (300, 3)
-    # print(y_true.shape)
+    print(y_true.shape)
 
     n_timesteps, dim = y_true.shape
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    print(f"Using device: {device}")
     y_true = y_true.to(device)
 
     # Create RNN
@@ -85,8 +86,8 @@ if __name__ == "__main__":
             )
 
     # Save trained RNN
-    torch.save(model.state_dict(), f"{dir}RNN_{system}.pt")
-    print(f"Trained RNN saved to {dir}RNN_{system}.pt")
+    torch.save(model.state_dict(), f"{dir}RNN_{system}_{EPOCHS}.pt")
+    print(f"Trained RNN saved to {dir}RNN_{system}_{EPOCHS}.pt")
 
 
     # ===== EVALUATION: AUTOREGRESSIVE ROLLOUT =====
