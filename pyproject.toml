@@ -1,0 +1,17 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "neuroai-project13"
+version = "0.1.0"
+description = "Information Decomposition in Task-Trained RNNs"
+requires-python = ">=3.12"
+dependencies = [
+    "torch",
+    "numpy",
+]
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["src*"]
