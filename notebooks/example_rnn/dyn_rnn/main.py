@@ -2,7 +2,7 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 import matplotlib.pyplot as plt
-from example_rnn.dyn_rnn.dynRNN import DynRNN
+from notebooks.example_rnn.dyn_rnn.dynRNN import DynRNN
 
 # Define task directory
 dir = "dynrnn/"
