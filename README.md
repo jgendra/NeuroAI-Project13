@@ -90,15 +90,12 @@ and **Bonferroni** correction for planned comparisons.
 NeuroAI-Project13/
 ├── README.md
 ├── environment.yml          # pinned conda environment
-├── configs/                 # experiment configs (task × condition × seed)
 ├── src/
 │   ├── models/              # CTRNN definition + Euler integration
-│   ├── tasks/               # NeuroGym task wrappers (dt=20 ms)
 │   ├── training/            # training loop, loss functions, BPTT
-│   ├── analysis/            # PID / ΦID / MI / Fisher pipelines
-│   └── stats/               # permutation tests, bootstrap, effect sizes
-├── notebooks/               # exploratory analysis + figure generation
-├── results/                 # checkpoints, saved activations, metric outputs
+│   └── analysis/            # PID / ΦID / MI / Fisher pipelines
+├── notebooks/               # exploratory analysis + throwaway/example files
+├── results/                 # saved model weights/activations, metric outputs
 ├── figures/                 # final figures
 └── docs/                    # technical note, references
 ```
