@@ -4,32 +4,39 @@ compute_pid_sinusoid.py
 
 Test the Gaussian analytic PID implementation on the sinusoid-trained RNN.
 
-Goal: compute PID at the *last timestep* of the RNN's hidden-state trajectory,
+Goal: compute PID at the "last timestep" of the RNN's hidden-state trajectory,
 using the hidden activations as the two source groups and the input sinusoid as
 the target.
 
 Important modelling note
 ------------------------
-PID is estimated from a *covariance over an ensemble of observations*. A single
+PID is estimated from a "covariance over an ensemble of observations". A single
 timestep of a single trajectory is one observation, which cannot define a
 covariance. The sinusoid RNN was trained on one trajectory, so to obtain a valid
 "PID at the last timestep" we must build an ensemble. We do this exactly the way
-the real NeuroGym project will: we run the trained RNN over many *trials* and use
+the our NeuroGym project will: we run the trained RNN over many "trials" and use
 the trial dimension as the sample/ensemble axis. Each trial is the same sinusoid
 with a random phase and a small amount of input noise (mirroring the noisy,
 parametrically-varied stimuli of the decision-making tasks). The PID at the last
 timestep is then computed across trials:
 
-    sources = hidden activations h(T) at the last timestep   (n_trials x n_units)
-    target  = the (clean) sinusoid value at the last timestep (n_trials,)
+    sources = hidden activations h(T) at the last timestep (n_trials x n_units)
+    target  = (clean) sinusoid value at the last timestep (n_trials,)
 
 Run `main.py` first so that `RNN_Sinusoid.pt` exists.
 """
 
+# Track run time
+import time
+start_time = time.time()
+
 import torch
 import numpy as np
-from trueRNN import TrueRNN
+import matplotlib.pyplot as plt
+from RNN import ElmanRNN
 from gaussian_pid import gaussian_pid_rnn
+# Define input data directory
+dir = "src/analysis/results/"
 
 # --------------------------------------------------------------------------- #
 # Settings (kept explicit so every choice is visible)
@@ -54,8 +61,8 @@ if __name__ == "__main__":
 
     # --- load the trained sinusoid RNN -------------------------------------- #
     # The constructor's default hidden size is 10, matching the trained model.
-    model = TrueRNN(dim=DIM, system=SYSTEM).to(device)         # build the architecture
-    model_path = f"RNN_{SYSTEM}.pt"                            # path to the saved weights
+    model = ElmanRNN(dim=DIM, system=SYSTEM).to(device)         # build the architecture
+    model_path = f"{dir}RNN_{SYSTEM}.pt"                            # path to the saved weights
     state = torch.load(model_path, map_location=device, weights_only=True)  # load weights
     model.load_state_dict(state)                               # restore the parameters
     model.eval()                                               # inference mode
@@ -107,3 +114,11 @@ if __name__ == "__main__":
     print(f"  I(X1;Y)    : {out['mi_1']:.4f}")
     print(f"  I(X2;Y)    : {out['mi_2']:.4f}")
     print(f"  I(X1,X2;Y) : {out['mi_joint']:.4f}  (= sum of the four atoms)")
+    
+    # Report run time
+    end_time = time.time()
+    elapsed = end_time - start_time
+    print(f"\nTotal run time: {elapsed:.2f} seconds")
+
+    # Save PID results
+    np.savez(f"{dir}pid_{SYSTEM}.npz", **out)

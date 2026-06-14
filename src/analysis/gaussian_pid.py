@@ -5,7 +5,7 @@ gaussian_pid.py
 Gaussian analytic Partial Information Decomposition (PID), using the
 Minimum-Mutual-Information (MMI) redundancy of Barrett (2015), i.e. the same
 Gaussian machinery that the `phyid` library (Mediano/Rosas/Luppi) uses for its
-Integrated Information Decomposition (PhiID), but specialised to *static* PID:
+Integrated Information Decomposition (PhiID), but specialised to "static" PID:
 two source groups -> one target, instead of past -> future.
 
 Why this is the right reduction
@@ -42,14 +42,14 @@ pass log_base=2 for bits.
 
 Known limitations (worth stating in the report)
 ------------------------------------------------
-* MMI forces one of the two unique terms to be exactly zero and forces
+1) MMI forces one of the two unique terms to be exactly zero and forces
   redundancy to be the smaller of the two source-target MIs, regardless of how
   the sources actually relate. This is a rigidity of the MMI definition.
-* Barrett's exactness result is for a *univariate* target. The code accepts a
+2) Barrett's exactness result is for a "univariate" target. The code accepts a
   multivariate target mechanically, but the MMI interpretation is cleanest for a
   univariate target (which is what this project uses: signed coherence /
   stimulus value).
-* The Gaussian assumption is only an approximation for bounded tanh activations.
+3) The Gaussian assumption is only an approximation for bounded tanh activations.
 """
 
 import numpy as np
@@ -123,8 +123,8 @@ def gaussian_pid(sources_1, sources_2, target,
     """
     Gaussian analytic MMI-PID for two source groups and one target.
 
-    This is the atomic primitive. It treats every *row* as one observation
-    (e.g. one trial) and every *column* as one variable (e.g. one RNN unit, or
+    This is the atomic primitive. It treats every "row" as one observation
+    (e.g. one trial) and every "column" as one variable (e.g. one RNN unit, or
     the scalar target). It estimates a single joint covariance over
     [sources_1 | sources_2 | target] and returns the four PID atoms in closed
     form.
@@ -267,26 +267,26 @@ def gaussian_pid_rnn(activations, target,
     ----------
     activations : array_like
         Hidden activations. Either
-          * (n_samples, n_timesteps, n_units)  -> per-timestep PID is available, or
-          * (n_samples, n_units)               -> already a single snapshot.
+          a) (n_samples, n_timesteps, n_units)  -> per-timestep PID is available, or
+          b) (n_samples, n_units)               -> already a single snapshot.
         `n_samples` is the ensemble dimension over which covariance is estimated
         (in the real project: trials; for a single-trajectory test RNN: time, if
         you pass the trajectory in the samples axis).
     target : array_like
         The target / stimulus. Either
-          * (n_samples, n_timesteps)  (a value per trial and timestep),
-          * (n_samples,)              (one value per trial, shared across time), or
-          * (n_samples, n_timesteps, dt) / (n_samples, dt) for a multivariate target.
+          a) (n_samples, n_timesteps)  (a value per trial and timestep),
+          b) (n_samples,)              (one value per trial, shared across time), or
+          c) (n_samples, n_timesteps, dt) / (n_samples, dt) for a multivariate target.
     timestep : int or None, optional
-        * int  -> compute PID only at this timestep (supports negative indexing,
+        int  -> compute PID only at this timestep (supports negative indexing,
                   e.g. -1 = last timestep). Returns scalar atoms.
-        * None -> compute PID at every timestep. Returns arrays of shape
+        None -> compute PID at every timestep. Returns arrays of shape
                   (n_timesteps,). Requires 3-D `activations`.
     bipartitions : {"random", "half"} or list of (idx1, idx2), optional
         How to split the units into two source groups:
-          * "random" (default): draw `n_bipartitions` random splits.
-          * "half": a single split into first-half / second-half units.
-          * explicit list: each element is a pair (idx1, idx2) of index arrays.
+          a) "random" (default): draw `n_bipartitions` random splits.
+          b) "half": a single split into first-half / second-half units.
+          c) explicit list: each element is a pair (idx1, idx2) of index arrays.
     n_bipartitions : int, optional
         Number of random splits to average over when bipartitions="random".
     balanced : bool, optional
