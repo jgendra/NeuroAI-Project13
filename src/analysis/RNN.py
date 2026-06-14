@@ -14,7 +14,7 @@ class ElmanRNN(nn.Module):
 
         # choose hidden size (you can tune these)
         if hidden_dim is None:
-            hidden_dim = 100
+            hidden_dim = 10
 
         self.hidden_dim = hidden_dim
         self.num_layers = num_layers

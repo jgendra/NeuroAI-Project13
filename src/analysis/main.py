@@ -108,8 +108,8 @@ if __name__ == "__main__":
             )
 
     # Save trained RNN
-    torch.save(model.state_dict(), f"{dir}RNN100_{system}.pt")
-    print(f"Trained RNN saved to {dir}RNN100_{system}.pt")
+    torch.save(model.state_dict(), f"{dir}RNN_{system}.pt")
+    print(f"Trained RNN saved to {dir}RNN_{system}.pt")
 
 
     # ===== EVALUATION: AUTOREGRESSIVE ROLLOUT =====
@@ -141,8 +141,8 @@ if __name__ == "__main__":
         x_seq = y_true.unsqueeze(1)            # (seq_len, batch=1, dim)
         h_seq, _ = model.rnn(x_seq)            # (seq_len, batch=1, hidden_dim)
         h_seq = h_seq.squeeze(1)               # (seq_len, hidden_dim)
-        torch.save(h_seq.cpu(), f"{dir}hidden100_{system}.pt")
-        print(f"Hidden states {tuple(h_seq.shape)} saved to {dir}hidden100_{system}.pt")
+        torch.save(h_seq.cpu(), f"{dir}hidden_{system}.pt")
+        print(f"Hidden states {tuple(h_seq.shape)} saved to {dir}hidden_{system}.pt")
 
 
     # ===== FIGURE 1: TRAINING CURVES (loss + R²) =====
@@ -177,7 +177,7 @@ if __name__ == "__main__":
 
     plt.title(f'Training curves — {system} RNN')
     plt.tight_layout()
-    plt.savefig(f"{dir}sinusoid100_training_curves_{system}.png", dpi=300)
+    plt.savefig(f"{dir}sinusoid_training_curves_{system}.png", dpi=300)
     plt.show()
 
 
@@ -215,5 +215,5 @@ if __name__ == "__main__":
         ax.legend(loc='upper left')
 
         plt.tight_layout()
-        plt.savefig(f"{dir}sinusoid100_trajectory_{system}.png", dpi=300)
+        plt.savefig(f"{dir}sinusoid_trajectory_{system}.png", dpi=300)
         plt.show()
