@@ -28,11 +28,11 @@ for bar, color in zip(bars, colors):
     bar.set_color(color)
 
 plt.title(f'PID at last timestep - {SYSTEM} (10 unit) RNN\nTotal I(X1,X2;Y) = {total:.3f} {unit}', fontsize=15, fontweight='bold')
+# Fontsize and limits
 plt.ylabel(f'Information ({unit})', fontsize=15)
-# Change xaxis label font size and remove ticks
-plt.xticks(fontsize=12)
 plt.yticks(fontsize=12)
 plt.ylim(0, max(v + s for v, s in zip(values, stds)) * 1.1)
+plt.xticks(fontsize=15)
 
 # Remove top and right edges
 plt.gca().spines['top'].set_visible(False)
