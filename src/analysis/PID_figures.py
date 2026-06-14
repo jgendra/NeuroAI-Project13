@@ -1,64 +1,44 @@
 import matplotlib.pyplot as plt
+import numpy as np
+
+# Define input data directory
+dir = "src/analysis/results/"
 
 # Load PID results
+SYSTEM = "Sinusoid"
+pid_path = f"{dir}pid_{SYSTEM}.npz"
+out = np.load(pid_path)
 
+# Plot PID bars with std error bars, and total MI as a title annotation
+unit = 'bits'
 
-# Plot PID bars with error bars
-labels = ['Redundancy', 'Unique', 'Synergy']
-values = [out['redundancy'],
-        (out['unique1'] + out['unique2']) / 2,
-        out['synergy']]
-errors = [out['redundancy_std'],
-        (out['unique1_std'] + out['unique2_std']) / 2,
-        out['synergy_std']]
-total  = out['mi_joint']
+labels = ['Redundancy', 'Unique1', 'Unique2', 'Synergy']
+values = [out['redundancy'], out['unique1'], out['unique2'], out['synergy']]
+stds = [out['redundancy_std'], out['unique1_std'], out['unique2_std'], out['synergy_std']]
+total = out['mi_joint']
 
-colors = ['#4C78A8', '#F58518', '#E45756']
+plt.figure(figsize=(8, 6))
+bars = plt.bar(labels, values, yerr=stds, capsize=5, width=0.6)
+# Add value labels above bars
+for bar, val, std in zip(bars, values, stds):
+    plt.text(bar.get_x() + bar.get_width() / 2, val + std + 0.02, f'{val:.3f}', ha='center', va='bottom', fontsize=12)
+# Give different colors to each bar
+colors = ['#4C78A8', '#F58518', '#E45756', '#54A24B']
+for bar, color in zip(bars, colors):
+    bar.set_color(color)
 
-fig, ax = plt.subplots(figsize=(6, 5))
+plt.title(f'PID at last timestep - {SYSTEM} (10 unit) RNN\nTotal I(X1,X2;Y) = {total:.3f} {unit}', fontsize=15, fontweight='bold')
+plt.ylabel(f'Information ({unit})', fontsize=15)
+# Change xaxis label font size and remove ticks
+plt.xticks(fontsize=12)
+plt.yticks(fontsize=12)
+plt.ylim(0, max(v + s for v, s in zip(values, stds)) * 1.1)
 
-bars = ax.bar(
-    labels, values,
-    yerr=errors,
-    capsize=5,
-    color=colors,
-    width=0.5,
-    error_kw=dict(ecolor='#333333', lw=1.2, capthick=1.2),
-    zorder=3,
-)
-
-# value label just above each error bar cap
-for bar, val, err in zip(bars, values, errors):
-    ax.text(
-        bar.get_x() + bar.get_width() / 2,
-        val + err + 0.04,
-        f'{val:.3f}',
-        ha='center', va='bottom',
-        fontsize=10, fontweight='500', color='#222222',
-    )
-
-# total info clearly above everything, anchored to axes fraction
-ax.text(
-    0.5, 1.06,
-    f'Total  I(X_{1},X_{2} ; Y) = {total:.3f} {unit}',
-    ha='center', va='bottom',
-    transform=ax.transAxes,
-    fontsize=13, fontweight='bold', color='#111111',
-)
-
-ax.set_ylabel(f'Information ({unit})', fontsize=11)
-ax.set_title(f'PID at last timestep - {SYSTEM} RNN',
-            fontsize=12, pad=28)        # extra pad keeps title below the total label
-ax.tick_params(axis='x', labelsize=11, length=0)
-ax.tick_params(axis='y', labelsize=10)
-ax.set_ylim(0, max(v + e for v, e in zip(values, errors)) * 1.45)
-
-ax.spines['top'].set_visible(False)
-ax.spines['right'].set_visible(False)
-ax.spines['left'].set_linewidth(0.8)
-ax.spines['bottom'].set_linewidth(0.8)
-ax.grid(False)
-
-fig.tight_layout()
-fig.savefig(f'{dir}pid_bars_{SYSTEM}.png', bbox_inches='tight', dpi=300)
+# Remove top and right edges
+plt.gca().spines['top'].set_visible(False)
+plt.gca().spines['right'].set_visible(False)
+plt.tight_layout()
+plt.savefig(f'{dir}pid_bars_{SYSTEM}.png', dpi=300)
 plt.show()
+
+

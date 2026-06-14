@@ -62,7 +62,7 @@ if __name__ == "__main__":
     # --- load the trained sinusoid RNN -------------------------------------- #
     # The constructor's default hidden size is 10, matching the trained model.
     model = ElmanRNN(dim=DIM, system=SYSTEM).to(device)         # build the architecture
-    model_path = f"{dir}RNN100_{SYSTEM}.pt"                            # path to the saved weights
+    model_path = f"{dir}RNN_{SYSTEM}.pt"                            # path to the saved weights
     state = torch.load(model_path, map_location=device, weights_only=True)  # load weights
     model.load_state_dict(state)                               # restore the parameters
     model.eval()                                               # inference mode
@@ -121,4 +121,4 @@ if __name__ == "__main__":
     print(f"\nTotal run time: {elapsed:.2f} seconds")
 
     # Save PID results
-    np.savez(f"{dir}pid100_{SYSTEM}.npz", **out)
+    np.savez(f"{dir}pid_{SYSTEM}.npz", **out)
