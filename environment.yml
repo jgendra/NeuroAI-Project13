@@ -1,19 +1,16 @@
 name: neuroai-project13
 channels:
-  - pytorch
   - conda-forge
   - defaults
 dependencies:
-  - python=3.12
-  - pytorch
-  - numpy
-  - matplotlib
-  - jupyter
-  - scipy
-  - scikit-learn
+  - python=3.11
   - pip
   - pip:
-    - gym
-    - neurogym
-    - jpype1
-    - git+https://github.com/Imperial-MIND-lab/integrated-info-decomp.git
+    - --extra-index-url https://download.pytorch.org/whl/cu121
+    - torch==2.3.1
+    - numpy==1.26.4
+    - scipy==1.13.1
+    - matplotlib==3.9.2
+    - seaborn==0.13.2
+    - neurogym==1.0.8
+    - jupyter
