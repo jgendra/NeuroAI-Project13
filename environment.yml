@@ -7,10 +7,10 @@ dependencies:
   - pip
   - pip:
     - --extra-index-url https://download.pytorch.org/whl/cu121
-    - torch==2.3.1
-    - numpy==1.26.4
-    - scipy==1.13.1
-    - matplotlib==3.9.2
-    - seaborn==0.13.2
+    - torch>=2.4.0
+    - numpy
+    - scipy
+    - matplotlib
+    - seaborn
     - neurogym==2.3.1
     - jupyter
