@@ -9,6 +9,7 @@ import numpy as np
 TIMING = {
     "fixation": 250,
     "stimulus": 400,
+    "delay": 0,
     "decision": 100
 }
 TOTAL_TIMESTEPS = sum(TIMING.values())

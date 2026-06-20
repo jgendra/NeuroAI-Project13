@@ -40,24 +40,32 @@ def make_env(config: dict, seed: int, test_mode: str = "uniform") -> gym.Env:
     env.reset(seed=seed)
     return env
 
+# In data_generator.py
+
 def extract_period_labels(env: gym.Env, seq_len: int) -> np.ndarray:
     """
-    Extracts timestep-level period labels (0=fixation, 1=stimulus, 2=decision).
+    Extracts timestep-level period labels using exact mathematical timings.
+    0 = Fixation, 1 = Stimulus, 2 = Decision
     """
-    gt = env.unwrapped.gt
-    ob = env.unwrapped.ob
-    T = min(len(gt), seq_len)
+    dt = env.unwrapped.dt
+    timing = env.unwrapped.timing
+    
+    # Calculate duration boundaries in timesteps
+    fix_steps = int(timing["fixation"] / dt)
+    stim_steps = int(timing["stimulus"] / dt)
     
     arr = np.zeros(seq_len, dtype=np.int8)
-    fix = ob[:T, 0] > 0.5
-    arr[:T][fix] = 0
-    stim = (~fix) & (gt[:T] == 0)
-    arr[:T][stim] = 1
-    dec = gt[:T] != 0
-    arr[:T][dec] = 2
     
-    if T < seq_len:
-        arr[T:] = arr[T - 1]
+    # 0 to fix_steps is implicitly 0 (Fixation)
+    
+    # Stimulus Period
+    stim_start = fix_steps
+    dec_start = fix_steps + stim_steps
+    arr[stim_start:dec_start] = 1
+    
+    # Decision Period
+    arr[dec_start:] = 2
+    
     return arr
 
 def generate_split(
