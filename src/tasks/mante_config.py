@@ -1,0 +1,44 @@
+"""
+mante_config.py
+Central configuration for Mante et al. (2013) dataset generation.
+"""
+
+import numpy as np
+
+# Total trial duration = 750ms at dt=1ms means exactly 750 timesteps.
+TIMING = {
+    "fixation": 250,
+    "stimulus": 400,
+    "decision": 100
+}
+TOTAL_TIMESTEPS = sum(TIMING.values())
+
+# Coherence distributions
+# NeuroGym expects positive coherences and applies the +/- internally based on ground truth.
+
+# Mante's raw fractions: 0.009, 0.036, 0.15
+# NeuroGym requires them scaled by 100:
+MANTE_TEST_COHS = [0.9, 3.6, 15.0]
+
+# Mante's uniform distribution bound: 0.1875
+# Scaled by 100: 18.75
+UNIFORM_COHS = np.linspace(0.0, 18.75, 50).tolist()
+
+CONFIG = {
+    "task": "ContextDecisionMaking-v0",
+    "dt": 1,
+    "sigma": 1.0,  # Noise standard deviation
+    "seq_len": TOTAL_TIMESTEPS,
+    "timing": TIMING,
+    
+    # Dataset sizes
+    "splits": {
+        "train": 160000,
+        "val": 2000,           # Used for early stopping
+        "test_uniform": 2000,  # Psychometric curve testing
+        "test_mante": 2000     # Specific Mante coherence testing
+    },
+    
+    "seed": 42,
+    "output_dir": "data/"
+}

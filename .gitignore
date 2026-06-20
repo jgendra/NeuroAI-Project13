@@ -1,4 +1,9 @@
-# Taken from https://github.com/github/gitignore
+### Manual additions
+# Generated Data
+*.npz
+*.json
+
+### Taken from https://github.com/github/gitignore
 
 ### Python
 # Byte-compiled / optimized / DLL files
