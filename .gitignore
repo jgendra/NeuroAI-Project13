@@ -3,6 +3,9 @@
 *.npz
 *.json
 
+# Model weights
+weights/
+
 ### Taken from https://github.com/github/gitignore
 
 ### Python

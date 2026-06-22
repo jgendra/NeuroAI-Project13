@@ -114,7 +114,8 @@ def generate_split(
             
             # 2. If the original trial was a "Context 2" trial, 
             # move its stimulus data from channels 3/4 over to channels 1/2.
-            if ctx == 2:
+            ng_ctx = trial_info['context']
+            if ng_ctx == 1:
                 ob[:, 1:3] = ob[:, 3:5]
                 
             # 3. Permanently zero out the distractor channels (3 and 4)
