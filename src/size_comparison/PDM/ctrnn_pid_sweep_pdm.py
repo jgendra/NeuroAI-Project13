@@ -653,7 +653,7 @@ def plot_comparison(all_results, save_path):
 # Main
 # ──────────────────────────────────────────────────────────────────────────────
 
-def main(hidden_sizes, n_train_batches, n_test_trials, n_bipartitions):
+def main(hidden_sizes, n_train_batches, n_test_trials):
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     print(f"Device: {device}")
     print(f"Hidden sizes: {hidden_sizes}")
@@ -681,6 +681,7 @@ def main(hidden_sizes, n_train_batches, n_test_trials, n_bipartitions):
         model, losses = train_ctrnn(h, n_train_batches, device, weights_dir)
 
         # PID
+        n_bipartitions = 2 * h
         print(f"  Running PID analysis (n_bipartitions={n_bipartitions})...")
         pid_data = run_pid(model, inputs, targets, cohs, n_bipartitions, device)
 
@@ -718,12 +719,10 @@ if __name__ == '__main__':
                    default=DEFAULT_HIDDEN_SIZES)
     p.add_argument('--n_train_batches',  type=int, default=DEFAULT_N_TRAIN)
     p.add_argument('--n_test_trials',    type=int, default=DEFAULT_N_TEST)
-    p.add_argument('--n_bipartitions',   type=int, default=DEFAULT_N_BIPARTITIONS)
     args = p.parse_args()
 
     main(
         hidden_sizes   = args.hidden_sizes,
         n_train_batches= args.n_train_batches,
         n_test_trials  = args.n_test_trials,
-        n_bipartitions = args.n_bipartitions,
     )

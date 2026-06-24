@@ -77,9 +77,9 @@ OUTPUT_DIM  = 3     # fixate / choice1 / choice2
 DT          = 20    # ms per timestep
 RESULTS_DIR = 'results/pid_sweep_cdm'
 
-DEFAULT_HIDDEN_SIZES   = [40, 60, 80, 100, 150, 200]
-DEFAULT_N_TRAIN        = 500
-DEFAULT_N_TEST         = 200
+DEFAULT_HIDDEN_SIZES   = [2, 4, 8, 12, 16, 20, 40, 60, 80, 100, 150, 200]
+DEFAULT_N_TRAIN        = 2500
+DEFAULT_N_TEST         = 500
 DEFAULT_LR             = 2e-3
 DEFAULT_BATCH_SIZE     = 16
 DEFAULT_N_BIPARTITIONS = 50
@@ -672,7 +672,7 @@ def plot_comparison(all_results, save_path):
 # Main
 # ──────────────────────────────────────────────────────────────────────────────
 
-def main(hidden_sizes, n_train_batches, n_test_trials, n_bipartitions):
+def main(hidden_sizes, n_train_batches, n_test_trials):
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     print(f"Device      : {device}")
     print(f"Task        : {TASK}")
@@ -703,6 +703,7 @@ def main(hidden_sizes, n_train_batches, n_test_trials, n_bipartitions):
 
         model, losses = train_ctrnn(h, n_train_batches, device, weights_dir, n_epochs=args.n_epochs)
 
+        n_bipartitions = 2 * h
         print(f"  Running PID (n_bipartitions={n_bipartitions})...")
         pid_data = run_pid(model, inputs, targets, cohs, ctxs,
                            n_bipartitions, device)
@@ -737,13 +738,11 @@ if __name__ == '__main__':
                    default=DEFAULT_HIDDEN_SIZES)
     p.add_argument('--n_train_batches', type=int, default=DEFAULT_N_TRAIN)
     p.add_argument('--n_test_trials',   type=int, default=DEFAULT_N_TEST)
-    p.add_argument('--n_bipartitions',  type=int, default=DEFAULT_N_BIPARTITIONS)
-    p.add_argument('--n_epochs', type=int, default=5)
+    p.add_argument('--n_epochs', type=int, default=1)
     args = p.parse_args()
 
     main(
         hidden_sizes    = args.hidden_sizes,
         n_train_batches = args.n_train_batches,
         n_test_trials   = args.n_test_trials,
-        n_bipartitions  = args.n_bipartitions,
     )
