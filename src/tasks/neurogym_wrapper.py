@@ -27,8 +27,7 @@ def create_dataset_generator(task_name='PerceptualDecisionMaking-v0', batch_size
     # the 7 required channels. We do not pass `use_expl_context=True` 
     # because it throws a TypeError in this specific version.
     
-    env = ngym.make(task_name, **env_kwargs, use_expl_context=True) if task_name == 'ContextDecisionMaking-v0' else ngym.make(task_name, **env_kwargs)
-    env.reset()
+    env = ngym.make(task_name, **env_kwargs)
     dataset = ngym.Dataset(env, batch_size=batch_size, seq_len=seq_len)
     
     return dataset

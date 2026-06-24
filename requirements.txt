@@ -11,4 +11,4 @@ matplotlib==3.9.2; python_version >= '3.11'
 seaborn==0.13.2; python_version >= '3.11'
 
 # NeuroGym tasks
-neurogym==1.0.8; python_version >= '3.11'
+neurogym==2.3.1; python_version >= '3.11'
