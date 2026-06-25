@@ -7,12 +7,13 @@ import numpy as np
 
 # Total trial duration = 750ms at dt=1ms means exactly 750 timesteps.
 TIMING = {
-    "fixation": 250,
-    "stimulus": 400,
+    "fixation": 300,
+    "stimulus": 750,
     "delay": 0,
-    "decision": 100
+    "decision": 100,
 }
-TOTAL_TIMESTEPS = sum(TIMING.values())
+DT = 10
+TOTAL_TIMESTEPS = sum(TIMING.values()) // DT
 
 # Coherence distributions
 # NeuroGym expects positive coherences and applies the +/- internally based on ground truth.
@@ -27,7 +28,7 @@ UNIFORM_COHS = np.linspace(0.0, 18.75, 50).tolist()
 
 CONFIG = {
     "task": "ContextDecisionMaking-v0",
-    "dt": 1,
+    "dt": DT,
     "sigma": 1.0,  # Noise standard deviation
     "seq_len": TOTAL_TIMESTEPS,
     "timing": TIMING,

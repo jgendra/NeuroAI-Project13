@@ -35,7 +35,7 @@ def make_env(config: dict, seed: int, test_mode: str = "uniform") -> gym.Env:
         use_expl_context=True,
     )
 
-    env.cohs = cohs
+    env.unwrapped.cohs = cohs
 
     env.reset(seed=seed)
     return env
@@ -134,7 +134,7 @@ def generate_split(
             labels[i, T:] = gt[-1]
             
         # Target Coherence (signed for Choice 1 / Choice 2)
-        coh = float(trial_info.get("coh", 0.0))
+        coh = float(trial_info.get("coh_1", 0.0))
         target_choice = trial_info.get("ground_truth", 1)
         coherences[i] = coh if target_choice == 1 else -coh
         
