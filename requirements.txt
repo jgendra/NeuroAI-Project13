@@ -3,12 +3,12 @@ torch==2.3.1; python_version >= '3.11'
 --extra-index-url https://download.pytorch.org/whl/cu121
 
 # Numerics & stats
-numpy==1.26.4; python_version >= '3.11'
+numpy==2.2.6; python_version >= '3.11'
 scipy==1.13.1; python_version >= '3.11'
 
 # Visualization
-matplotlib==3.9.2; python_version >= '3.11'
+matplotlib==3.10.9; python_version >= '3.11'
 seaborn==0.13.2; python_version >= '3.11'
 
 # NeuroGym tasks
-neurogym==1.0.8; python_version >= '3.11'
+neurogym==2.3.1; python_version >= '3.11'
