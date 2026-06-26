@@ -60,10 +60,13 @@ try:
     from src.models.ctrnn import CTRNN
     from src.analysis.gaussian_pid import gaussian_pid_rnn
     from src.tasks.neurogym_wrapper import create_dataset_generator
+    from src.tasks.data_loader import load_mante_data
+    from src.tasks.mante_config import CONFIG, UNIFORM_COHS, MANTE_TEST_COHS
     _USING_PROJECT_MODULES = True
-except ImportError:
+except Exception as exc:
     _USING_PROJECT_MODULES = False
-    print("[WARN] src/ modules not found — using built-in fallbacks.")
+    print(f"[WARN] src/ modules could not be imported: {exc}")
+    print("[WARN] using built-in fallbacks instead.")
 
 print(f"Using project modules: {_USING_PROJECT_MODULES}")
 
@@ -75,15 +78,18 @@ TASK        = 'ContextDecisionMaking-v0'
 INPUT_DIM   = 7     # fixation + 4 stim + 2 context channels
 OUTPUT_DIM  = 3     # fixate / choice1 / choice2
 DT          = 20    # ms per timestep
-RESULTS_DIR = 'results/pid_sweep_cdm'
+from pathlib import Path
 
+RESULTS_DIR = Path(__file__).resolve().parents[3] / "results" / "size_comparison" / "CDM_results" / "pid_sweep_cdm"
+RESULTS_DIR.mkdir(parents=True, exist_ok=True)
 DEFAULT_HIDDEN_SIZES   = [2, 4, 8, 12, 16, 20, 40, 60, 80, 100, 150, 200]
-DEFAULT_N_TRAIN        = 2500
-DEFAULT_N_TEST         = 500
+DEFAULT_N_Batches      = 157
+DEFAULT_N_TEST         = 2000
 DEFAULT_LR             = 2e-3
-DEFAULT_BATCH_SIZE     = 16
+DEFAULT_BATCH_SIZE     = 1024
 DEFAULT_N_BIPARTITIONS = 50
 DEFAULT_SEED           = 42
+Default_N_EPOCHS       = 50
 
 # Fixed timing for PID evaluation
 # CRITICAL: delay must be 0 — default is stochastic TruncExp(600,300,3000)
@@ -210,11 +216,55 @@ def _fallback_gaussian_pid(activations, target, timestep=None,
 
 
 # ──────────────────────────────────────────────────────────────────────────────
-# Fallback dataset generator
+# Dataset helpers
 # ──────────────────────────────────────────────────────────────────────────────
+
+def resolve_dataset_paths(data_dir=None, train_path=None, val_path=None, test_path=None):
+    if data_dir is not None:
+        train_path = train_path or os.path.join(data_dir, 'train.npz')
+        val_path   = val_path or os.path.join(data_dir, 'val.npz')
+        test_path  = test_path or os.path.join(data_dir, 'test_uniform.npz')
+
+    resolved = {
+        'train_path': train_path,
+        'val_path': val_path,
+        'test_path': test_path,
+    }
+    for name, path in resolved.items():
+        if path is not None and not os.path.exists(path):
+            raise FileNotFoundError(f"Dataset file not found: {path}")
+    return resolved
+
+
+def build_npz_loader(npz_path, batch_size, shuffle=False):
+    if npz_path is None:
+        return None
+    return load_mante_data(npz_path, batch_size=batch_size, shuffle=shuffle)
+
+
+def load_npz_split_as_tensors(npz_path, device):
+    if npz_path is None:
+        return None, None, None, None
+
+    data = np.load(npz_path)
+    obs = data['observations'].astype(np.float32)
+    labels = data['labels'].astype(np.int64)
+    cohs = np.array(data['coherences'], dtype=np.float32)
+
+    ctx_key = 'contexts' if 'contexts' in data else 'contexts'
+    ctxs = np.array(data[ctx_key], dtype=np.int32)
+
+    return (
+        torch.from_numpy(obs).to(device),
+        torch.from_numpy(labels).to(device),
+        cohs,
+        ctxs,
+    )
+
 
 def _fallback_dataset_generator(task, dt=DT, batch_size=DEFAULT_BATCH_SIZE,
                                  seq_len=120):
+    
     env = ngym.make(task, dt=dt, timing={'delay': 0}, use_expl_context=True)
     env.reset(seed=DEFAULT_SEED)
     print(type(env))
@@ -291,39 +341,79 @@ def masked_cross_entropy(outputs, targets):
 # ──────────────────────────────────────────────────────────────────────────────
 
 def train_ctrnn(hidden_size, n_batches, device, weights_dir,
-                n_epochs=5, seed=DEFAULT_SEED):
+                n_epochs=5, seed=DEFAULT_SEED,
+                train_loader=None, val_loader=None):
     torch.manual_seed(seed)
     np.random.seed(seed)
 
     model     = WrappedCTRNN(INPUT_DIM, hidden_size).to(device)
     optimizer = optim.Adam(model.parameters(), lr=DEFAULT_LR)
 
-    if _USING_PROJECT_MODULES:
-        dataset = make_dataset(TASK)
-    else:
-        dataset = make_dataset(TASK, dt=DT)
+    if train_loader is None:
+        if _USING_PROJECT_MODULES:
+            dataset = make_dataset(CONFIG)
+        else:
+            dataset = make_dataset(TASK, dt=DT)
 
-    print(f"\n  Training CTRNN  hidden={hidden_size}  epochs={n_epochs}  batches/epoch={n_batches}")
+    print(f"\n  Training CTRNN  hidden={hidden_size}  epochs={n_epochs}")
     losses = []
 
     for epoch in range(n_epochs):
-        for i in range(n_batches):
-            inputs_np, targets_np = dataset()
-            inputs  = torch.from_numpy(inputs_np).float().transpose(0, 1).to(device)
-            targets = torch.from_numpy(targets_np).long().transpose(0, 1).to(device)
+        model.train()
+        epoch_losses = []
 
-            optimizer.zero_grad()
-            outputs, _ = model(inputs)
-            loss = masked_cross_entropy(outputs, targets)
-            loss.backward()
-            torch.nn.utils.clip_grad_norm_(model.parameters(), 1.0)
-            optimizer.step()
+        if train_loader is not None:
+            for batch_idx, batch in enumerate(train_loader):
+                inputs, targets, _, _, _ = batch
+                inputs = inputs.to(device)
+                targets = targets.to(device)
 
-            losses.append(loss.item())
-            batch_num = epoch * n_batches + i + 1
-            if (i + 1) % 200 == 0 or (i + 1) == n_batches:
-                print(f"    epoch {epoch+1}/{n_epochs} batch {i+1:>4}/{n_batches}  "
-                      f"loss={np.mean(losses[-50:]):.4f}")
+                optimizer.zero_grad()
+                outputs, _ = model(inputs)
+                loss = masked_cross_entropy(outputs, targets)
+                loss.backward()
+                torch.nn.utils.clip_grad_norm_(model.parameters(), 1.0)
+                optimizer.step()
+
+                loss_val = loss.item()
+                epoch_losses.append(loss_val)
+                losses.append(loss_val)
+
+                if (batch_idx + 1) % 200 == 0 or (batch_idx + 1) == len(train_loader):
+                    print(f"    epoch {epoch+1}/{n_epochs} batch {batch_idx+1:>4}/{len(train_loader)}  "
+                          f"loss={np.mean(losses[-50:]):.4f}")
+        else:
+            for i in range(n_batches):
+                inputs_np, targets_np = dataset()
+                inputs  = torch.from_numpy(inputs_np).float().transpose(0, 1).to(device)
+                targets = torch.from_numpy(targets_np).long().transpose(0, 1).to(device)
+
+                optimizer.zero_grad()
+                outputs, _ = model(inputs)
+                loss = masked_cross_entropy(outputs, targets)
+                loss.backward()
+                torch.nn.utils.clip_grad_norm_(model.parameters(), 1.0)
+                optimizer.step()
+
+                loss_val = loss.item()
+                epoch_losses.append(loss_val)
+                losses.append(loss_val)
+                batch_num = epoch * n_batches + i + 1
+                if (i + 1) % 200 == 0 or (i + 1) == n_batches:
+                    print(f"    epoch {epoch+1}/{n_epochs} batch {i+1:>4}/{n_batches}  "
+                          f"loss={np.mean(losses[-50:]):.4f}")
+
+        if val_loader is not None:
+            model.eval()
+            val_losses = []
+            with torch.no_grad():
+                for inputs, targets, _, _, _ in val_loader:
+                    inputs = inputs.to(device)
+                    targets = targets.to(device)
+                    outputs, _ = model(inputs)
+                    val_loss = masked_cross_entropy(outputs, targets)
+                    val_losses.append(val_loss.item())
+            print(f"    epoch {epoch+1}/{n_epochs} validation_loss={np.mean(val_losses):.4f}")
 
     save_path = os.path.join(weights_dir, f'ctrnn_cdm_h{hidden_size}.pt')
     torch.save(model.state_dict(), save_path)
@@ -335,37 +425,45 @@ def train_ctrnn(hidden_size, n_batches, device, weights_dir,
 # Test batch — fixed timing, collect rich metadata
 # ──────────────────────────────────────────────────────────────────────────────
 
-def get_test_batch(n_trials, device, seed=DEFAULT_SEED):
+def get_test_batch(n_trials, device, config, seed=DEFAULT_SEED):
     """
     Returns
     -------
-    inputs          : (B, T, 7)  tensor on device
-    targets         : (B, T)     tensor on device
-    signed_coh_rel  : (B,)  np  signed coherence of the RELEVANT modality
-    context_labels  : (B,)  np  int, 0 or 1
+    inputs          : (B, T, 7) tensor on device
+    targets         : (B, T) tensor on device
+    signed_coh_rel  : (B,) np array
+    context_labels  : (B,) np array
     """
-    env = ngym.make(TASK, dt=DT, timing=EVAL_TIMING, use_expl_context=True)
+
+    # Create environment using same config as training
+    dataset = create_dataset_generator(config)
+    env = dataset.env
+
     env.reset(seed=seed)
 
     obs_l, gt_l, coh_l, ctx_l = [], [], [], []
 
     for _ in range(n_trials):
+
         env.unwrapped.new_trial()
-        ob    = env.unwrapped.ob.astype(np.float32)   # (T, 7)
-        gt    = env.unwrapped.gt.astype(np.int64)      # (T,)
+
+        ob = env.unwrapped.ob.astype(np.float32)
+        gt = env.unwrapped.gt.astype(np.int64)
         trial = env.unwrapped.trial
 
-        context      = int(trial['context'])            # 0 or 1
-        ground_truth = int(trial['ground_truth'])       # 1 or 2
-        coh_0        = float(trial['coh_1'])
-        coh_1        = float(trial['coh_2'])
+        context = int(trial["context"])
+        ground_truth = int(trial["ground_truth"])
 
-        # Signed coherence of the RELEVANT modality:
-        # context=0 → attend modality 0 → relevant coh = coh_0
-        # context=1 → attend modality 1 → relevant coh = coh_1
-        # Sign: +coh if ground_truth==1, -coh if ground_truth==2
+        # Verify once with:
+        # print(trial.keys())
+
+        coh_0 = float(trial["coh_1"])
+        coh_1 = float(trial["coh_2"])
+
+        # Relevant modality depends on context
         rel_coh = coh_0 if context == 0 else coh_1
-        sign    = 1 if ground_truth == 1 else -1
+
+        sign = 1 if ground_truth == 1 else -1
         signed_coh = sign * rel_coh
 
         obs_l.append(ob)
@@ -373,11 +471,29 @@ def get_test_batch(n_trials, device, seed=DEFAULT_SEED):
         coh_l.append(signed_coh)
         ctx_l.append(context)
 
-    inputs  = torch.tensor(np.stack(obs_l), dtype=torch.float32).to(device)
-    targets = torch.tensor(np.stack(gt_l),  dtype=torch.long).to(device)
-    cohs    = np.array(coh_l, dtype=np.float32)
-    ctxs    = np.array(ctx_l, dtype=np.int32)
+    inputs = torch.tensor(
+        np.stack(obs_l),
+        dtype=torch.float32,
+        device=device,
+    )
 
+    targets = torch.tensor(
+        np.stack(gt_l),
+        dtype=torch.long,
+        device=device,
+    )
+
+    cohs = np.array(coh_l, dtype=np.float32)
+    ctxs = np.array(ctx_l, dtype=np.int32)
+    print("Current cohs:", env.unwrapped.cohs)
+    sampled = []
+
+    for _ in range(100):
+        env.unwrapped.new_trial()
+        sampled.append(env.unwrapped.trial["coh_0"])
+
+    print("Unique sampled coherences:")
+    print(sorted(set(sampled))[:10])
     return inputs, targets, cohs, ctxs
 
 
@@ -672,11 +788,13 @@ def plot_comparison(all_results, save_path):
 # Main
 # ──────────────────────────────────────────────────────────────────────────────
 
-def main(hidden_sizes, n_train_batches, n_test_trials):
+def main(hidden_sizes, n_train_batches, n_test_trials, batch_size=DEFAULT_BATCH_SIZE,
+         data_dir=None, train_path=None, val_path=None, test_path=None, n_epochs=1):
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     print(f"Device      : {device}")
     print(f"Task        : {TASK}")
     print(f"Input dim   : {INPUT_DIM}  (fixation + 4 stim channels + 2 context channels)")
+    hidden_sizes = sorted(hidden_sizes)
     print(f"Hidden sizes: {hidden_sizes}")
     print(f"Train batches per model: {n_train_batches}")
     print(f"Test trials for PID    : {n_test_trials}")
@@ -687,12 +805,25 @@ def main(hidden_sizes, n_train_batches, n_test_trials):
     os.makedirs(weights_dir, exist_ok=True)
 
     # One shared test batch for all models
-    print("\nGenerating fixed test batch...")
-    inputs, targets, cohs, ctxs = get_test_batch(n_test_trials, device)
-    print(f"  inputs : {tuple(inputs.shape)}")
-    print(f"  cohs   : range [{cohs.min():.1f}, {cohs.max():.1f}]  "
-          f"std={cohs.std():.2f}")
-    print(f"  context: {np.bincount(ctxs)}  (count per context label)")
+    if test_path is not None:
+        print("\nLoading fixed test split from NPZ...")
+        inputs, targets, cohs, ctxs = load_npz_split_as_tensors(test_path, device)
+        print(f"  inputs : {tuple(inputs.shape)}")
+        print(f"  cohs   : range [{cohs.min():.1f}, {cohs.max():.1f}]  "
+              f"std={cohs.std():.2f}")
+        print(f"  context: {np.bincount(ctxs)}  (count per context label)")
+    else:
+        print("\nGenerating fixed test batch...")
+        inputs, targets, cohs, ctxs = get_test_batch(
+        n_test_trials,
+        device,
+        CONFIG,
+        seed=DEFAULT_SEED
+        )
+        print(f"  inputs : {tuple(inputs.shape)}")
+        print(f"  cohs   : range [{cohs.min():.1f}, {cohs.max():.1f}]  "
+              f"std={cohs.std():.2f}")
+        print(f"  context: {np.bincount(ctxs)}  (count per context label)")
 
     all_results = {}
 
@@ -701,7 +832,18 @@ def main(hidden_sizes, n_train_batches, n_test_trials):
         print(f"  Hidden size = {h}")
         print(f"{'='*60}")
 
-        model, losses = train_ctrnn(h, n_train_batches, device, weights_dir, n_epochs=args.n_epochs)
+        train_loader = build_npz_loader(train_path, batch_size=batch_size, shuffle=True) if train_path is not None else None
+        val_loader   = build_npz_loader(val_path, batch_size=batch_size, shuffle=False) if val_path is not None else None
+
+        model, losses = train_ctrnn(
+            h,
+            n_train_batches,
+            device,
+            weights_dir,
+            n_epochs=n_epochs,
+            train_loader=train_loader,
+            val_loader=val_loader,
+        )
 
         n_bipartitions = 2 * h
         print(f"  Running PID (n_bipartitions={n_bipartitions})...")
@@ -736,13 +878,26 @@ if __name__ == '__main__':
         description='CTRNN PID sweep — ContextDecisionMaking-v0')
     p.add_argument('--hidden_sizes',    nargs='+', type=int,
                    default=DEFAULT_HIDDEN_SIZES)
-    p.add_argument('--n_train_batches', type=int, default=DEFAULT_N_TRAIN)
+    p.add_argument('--n_train_batches', type=int, default=DEFAULT_N_Batches)
     p.add_argument('--n_test_trials',   type=int, default=DEFAULT_N_TEST)
-    p.add_argument('--n_epochs', type=int, default=1)
+    p.add_argument('--batch_size',      type=int, default=DEFAULT_BATCH_SIZE)
+    p.add_argument('--n_epochs', type=int, default=Default_N_EPOCHS,
+                   help='Number of training epochs per model')
+    p.add_argument('--train_path', type=str, default=None,
+                   help='Path to NPZ file for training data (optional)')
+    p.add_argument('--val_path', type=str, default=None,
+                   help='Path to NPZ file for validation data (optional)')
+    p.add_argument('--test_path', type=str, default=None,
+                   help='Path to NPZ file for test data (optional)')
     args = p.parse_args()
 
     main(
         hidden_sizes    = args.hidden_sizes,
         n_train_batches = args.n_train_batches,
         n_test_trials   = args.n_test_trials,
+        batch_size      = args.batch_size,
+        train_path      = args.train_path,
+        val_path        = args.val_path,
+        test_path       = args.test_path,
+        n_epochs        = args.n_epochs,
     )

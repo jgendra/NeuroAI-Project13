@@ -656,6 +656,7 @@ def plot_comparison(all_results, save_path):
 def main(hidden_sizes, n_train_batches, n_test_trials):
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     print(f"Device: {device}")
+    hidden_sizes = sorted(hidden_sizes)
     print(f"Hidden sizes: {hidden_sizes}")
     print(f"Training batches per model: {n_train_batches}")
     print(f"Test trials for PID: {n_test_trials}")

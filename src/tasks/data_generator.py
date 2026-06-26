@@ -10,8 +10,12 @@ import numpy as np
 import neurogym as ngym
 import gymnasium as gym
 from typing import Dict
+import math
 
-from mante_config import CONFIG, UNIFORM_COHS, MANTE_TEST_COHS
+try:
+    from .mante_config import CONFIG, UNIFORM_COHS, MANTE_TEST_COHS
+except ImportError:  # pragma: no cover - fallback for direct script execution
+    from mante_config import CONFIG, UNIFORM_COHS, MANTE_TEST_COHS
 
 def make_env(config: dict, seed: int, test_mode: str = "uniform") -> gym.Env:
     """
@@ -26,7 +30,7 @@ def make_env(config: dict, seed: int, test_mode: str = "uniform") -> gym.Env:
         Initialized NeuroGym environment.
     """
     cohs = MANTE_TEST_COHS if test_mode == "mante" else UNIFORM_COHS
-    
+    env.unwrapped.cohs = cohs  # Set the coherences for the environment
     env = ngym.make(
         config["task"],
         dt=config["dt"],
@@ -35,7 +39,6 @@ def make_env(config: dict, seed: int, test_mode: str = "uniform") -> gym.Env:
         use_expl_context=True,
     )
 
-    env.cohs = cohs
 
     env.reset(seed=seed)
     return env
