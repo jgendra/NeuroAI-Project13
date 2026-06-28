@@ -1,5 +1,5 @@
 # Core ML — CUDA 12.1 build, compatible with all team GPUs + Python 3.11
-torch==2.3.1; python_version >= '3.11'
+torch==2.4.1; python_version >= '3.11'
 --extra-index-url https://download.pytorch.org/whl/cu121
 
 # Numerics & stats
