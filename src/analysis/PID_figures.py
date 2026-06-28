@@ -44,7 +44,7 @@ plt.show()
 
 
 
-# # Measure Gaussianity of hidden unit activations across all timesteps, for each unit.
+# Measure Gaussianity of hidden unit activations across all timesteps, for each unit.
 import torch
 from scipy import stats
 
