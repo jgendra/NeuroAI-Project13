@@ -90,13 +90,30 @@ and **Bonferroni** correction for planned comparisons.
 NeuroAI-Project13/
 ├── README.md
 ├── environment.yml          # pinned conda environment
+├── requirements.txt         # pip dependencies
+├── pyproject.toml
 ├── src/
-│   ├── models/              # CTRNN definition + Euler integration
+│   ├── models/              # CTRNN definition and architecture
 │   ├── training/            # training loop, loss functions, BPTT
-│   └── analysis/            # PID / ΦID / MI / Fisher pipelines
-├── notebooks/               # exploratory analysis + throwaway/example files
-├── results/                 # saved model weights/activations, metric outputs
+│   ├── tasks/               # NeuroGym task wrappers and stimulus preprocessing
+│   └── analysis/            # PID computation, stats, plotting
+├── notebooks/               # exploratory scratch analysis + throwaway/example files
+├── results/
+│   ├── model_weights/       # saved .pt checkpoint files per CTRNN seed
+│   │   ├── perceptual/
+│   │   └── context/
+│   ├── model_activations/   # saved hidden state tensors per CTRNN seed and trial
+│   │   ├── perceptual/
+│   │   └── context/    
+│   ├── stimulus_coherences/ # saved coherence arrays per CTRNN seed and trial
+│   │   ├── perceptual/
+│   │   └── context/
+│   └── pid_outputs/         # saved PID atom arrays per CTRNN seed
+│       ├── perceptual/
+│       └── context/
 ├── figures/                 # final figures
+│   ├── learning_curves/     # CTRNN train/test loss and accuracy curves
+│   └── pid/                 # PID atom plots
 └── docs/                    # technical note, references
 ```
 

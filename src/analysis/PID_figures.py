@@ -38,7 +38,43 @@ plt.xticks(fontsize=15)
 plt.gca().spines['top'].set_visible(False)
 plt.gca().spines['right'].set_visible(False)
 plt.tight_layout()
-plt.savefig(f'{dir}pid_bars_{SYSTEM}.png', dpi=300)
+# plt.savefig(f'{dir}pid_bars_{SYSTEM}.png', dpi=300)
 plt.show()
 
 
+
+
+# Measure Gaussianity of hidden unit activations across all timesteps, for each unit.
+import torch
+from scipy import stats
+
+h = torch.load(f'{dir}hidden_Sinusoid.pt', weights_only=True).numpy()  # (300, 10)
+n_units = h.shape[1]
+
+fig, axes = plt.subplots(2, 5, figsize=(14, 5))
+axes = axes.ravel()
+
+for i in range(n_units):
+    ax = axes[i]
+    unit_acts = h[:, i]                          # 300 values across timesteps
+
+    # histogram of activations
+    ax.hist(unit_acts, bins=20, color='#4C78A8', alpha=0.75, density=True, zorder=2)
+
+    # overlay best-fit Gaussian for visual comparison
+    mu, sigma = unit_acts.mean(), unit_acts.std()
+    x = np.linspace(unit_acts.min(), unit_acts.max(), 200)
+    ax.plot(x, stats.norm.pdf(x, mu, sigma), color='#E45756', lw=1.8, zorder=3)
+
+    # Shapiro-Wilk p-value (tests departure from normality; p<0.05 = non-Gaussian)
+    _, p = stats.shapiro(unit_acts)
+    ax.set_title(f'Unit {i+1}   p={p:.2f}', fontsize=9)
+    ax.tick_params(labelsize=7)
+    ax.spines['top'].set_visible(False)
+    ax.spines['right'].set_visible(False)
+
+fig.suptitle('Hidden unit activation distributions (blue=data, red=fitted Gaussian)\n'
+             'Shapiro-Wilk p-value: p>0.05 consistent with Gaussian', fontsize=11)
+fig.tight_layout()
+# fig.savefig('unit_activations_gaussianity.png', dpi=150, bbox_inches='tight')
+plt.show()
