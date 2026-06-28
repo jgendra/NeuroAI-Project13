@@ -490,7 +490,7 @@ def get_test_batch(n_trials, device, config, seed=DEFAULT_SEED):
 
     for _ in range(100):
         env.unwrapped.new_trial()
-        sampled.append(env.unwrapped.trial["coh_0"])
+        sampled.append(env.unwrapped.trial["coh_1"])
 
     print("Unique sampled coherences:")
     print(sorted(set(sampled))[:10])
@@ -567,6 +567,7 @@ def run_pid(model, inputs, targets, cohs, ctxs, n_bipartitions, device):
               f"Syn={results[target_name]['synergy'][tend]:.4f}b | "
               f"Red={results[target_name]['redundancy'][tend]:.4f}b")
 
+    results['activations'] = acts  # (B, T, H)
     return results
 
 
@@ -868,6 +869,7 @@ def main(hidden_sizes, n_train_batches, n_test_trials, batch_size=DEFAULT_BATCH_
                 save_dict[f'h{h}_{tgt}_{atom}'] = r[tgt][atom]
             save_dict[f'h{h}_{tgt}_stim_end'] = np.array(r[tgt]['stim_end'])
         save_dict[f'h{h}_losses'] = np.array(r['losses'])
+        save_dict[f'h{h}_activations'] = r['activations']  # (B, T, H)
     np.savez_compressed(npz_path, **save_dict)
     print(f"Raw results → {npz_path}")
     print("\nDone.")

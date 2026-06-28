@@ -12,7 +12,8 @@ def load_mante_data(
     npz_path: str, 
     batch_size: int = 64, 
     shuffle: bool = True, 
-    subsample_step: int = 1
+    subsample_step: int = 1,
+    input_dim: int = None,
 ) -> DataLoader:
     """
     Loads .npz data, applies temporal subsampling, and returns a PyTorch DataLoader.
@@ -38,6 +39,10 @@ def load_mante_data(
     # Trial-level variables (no temporal dimension)
     cohs = data["coherences"]
     ctxs = data["contexts"]
+
+    # Optionally select only the first `input_dim` feature channels.
+    if input_dim is not None:
+        obs = obs[..., :input_dim]
     
     # 2. Convert to PyTorch tensors
     obs_t = torch.tensor(obs, dtype=torch.float32)

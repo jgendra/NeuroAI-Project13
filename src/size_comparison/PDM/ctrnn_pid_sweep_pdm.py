@@ -53,7 +53,7 @@ TASK          = 'PerceptualDecisionMaking-v0'
 INPUT_DIM     = 3          # fixation + 2 stimulus channels
 OUTPUT_DIM    = 3          # fixate / choice1 / choice2
 DT            = 20         # ms per timestep
-RESULTS_DIR   = 'results/pid_sweep'
+RESULTS_DIR   = '..\..\..\results\size_comparison\PDM_results\pid_sweep_pdm'
 
 DEFAULT_HIDDEN_SIZES  = [40, 60, 80, 100, 150, 20, 16, 12, 8, 4, 2]
 DEFAULT_N_TRAIN       = 800    # batches (each batch = 16 trials)
@@ -459,6 +459,7 @@ def run_pid(model, inputs, targets, cohs, n_bipartitions, device):
         'mi_joint':   np.array(pid_out['mi_joint']),
         'stim_end':   avg_stim_end,
         'seq_len':    acts.shape[1],
+        'activations': acts,  # (B, T, H)
     }
 
 
@@ -708,6 +709,7 @@ def main(hidden_sizes, n_train_batches, n_test_trials):
             save_dict[f'h{h}_{atom}'] = r['pid'][atom]
         save_dict[f'h{h}_losses']   = np.array(r['losses'])
         save_dict[f'h{h}_stim_end'] = np.array(r['pid']['stim_end'])
+        save_dict[f'h{h}_activations'] = r['pid']['activations']  # (B, T, H)
     np.savez_compressed(npz_path, **save_dict)
     print(f"Raw results saved → {npz_path}")
 
