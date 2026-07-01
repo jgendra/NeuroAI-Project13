@@ -79,8 +79,9 @@ print(f"Using project modules: {_USING_PROJECT_MODULES}")
 # Configuration
 # ──────────────────────────────────────────────────────────────────────────────
 
-RESULTS_DIR  = Path('results/ctrnn_both_tasks')
-RESULTS_DIR.mkdir(parents=True, exist_ok=True)
+
+RESULTS_DIR = Path(r"E:\TUM\3sem\NeuroAI\project\github_neuroai\results")
+
 WEIGHTS_DIR  = RESULTS_DIR / 'weights'
 WEIGHTS_DIR.mkdir(parents=True, exist_ok=True)
 
@@ -267,6 +268,44 @@ def masked_cross_entropy(outputs, targets, periods=None):
     return F.cross_entropy(outputs[mask], targets[mask])
 
 
+def masked_accuracy_counts(outputs, targets, periods=None):
+    """Return (correct, total) for decision-period predictions."""
+    if periods is not None:
+        mask = (periods == 2)
+    else:
+        mask = (targets != 0)
+
+    if mask.sum() == 0:
+        return 0, 0
+
+    preds = outputs[mask].argmax(dim=1)
+    correct = (preds == targets[mask]).sum().item()
+    total = int(mask.sum().item())
+    return correct, total
+
+
+def compute_decision_accuracy(model, loader, device):
+    """Evaluate decision-period accuracy on a loader."""
+    model.eval()
+    correct_total = 0
+    total_total = 0
+
+    with torch.no_grad():
+        for batch in loader:
+            obs, labels, periods, cohs, ctxs = batch
+            obs = obs.to(device)
+            labels = labels.to(device)
+            periods = periods.to(device)
+            outputs, _ = model(obs)
+            c, t = masked_accuracy_counts(outputs, labels, periods)
+            correct_total += c
+            total_total += t
+
+    if total_total == 0:
+        return 0.0
+    return correct_total / float(total_total)
+
+
 # ──────────────────────────────────────────────────────────────────────────────
 # Fallback on-the-fly data generator (used when no NPZ provided)
 # ──────────────────────────────────────────────────────────────────────────────
@@ -340,7 +379,7 @@ def train_ctrnn(
     best_val_loss     = float('inf')
     patience_counter  = 0
     best_weights      = copy.deepcopy(model.state_dict())
-    history           = {'train_loss': [], 'val_loss': []}
+    history           = {'train_loss': [], 'train_acc': [], 'val_loss': [], 'val_acc': []}
 
     print(f"\n  Training CTRNN | task={task_key} | hidden={hidden_size} | "
           f"epochs={num_epochs} | patience={patience}")
@@ -349,6 +388,7 @@ def train_ctrnn(
         # ── Training ──
         model.train()
         train_losses = []
+        train_correct, train_total = 0, 0
 
         if train_loader is not None:
             for batch in train_loader:
@@ -364,6 +404,10 @@ def train_ctrnn(
                 torch.nn.utils.clip_grad_norm_(model.parameters(), 1.0)
                 optimizer.step()
                 train_losses.append(loss.item())
+
+                c, t = masked_accuracy_counts(outputs, labels, periods)
+                train_correct += c
+                train_total += t
 
         else:
             # On-the-fly: treat one epoch as n_batches mini-batches
@@ -381,12 +425,19 @@ def train_ctrnn(
                 optimizer.step()
                 train_losses.append(loss.item())
 
+                c, t = masked_accuracy_counts(outputs, labels)
+                train_correct += c
+                train_total += t
+
         avg_train = float(np.mean(train_losses))
+        avg_train_acc = train_correct / max(1, train_total)
         history['train_loss'].append(avg_train)
+        history['train_acc'].append(avg_train_acc)
 
         # ── Validation ──
         model.eval()
         val_losses = []
+        val_correct, val_total = 0, 0
 
         if val_loader is not None:
             with torch.no_grad():
@@ -399,6 +450,9 @@ def train_ctrnn(
                     val_losses.append(
                         masked_cross_entropy(outputs, labels, periods).item()
                     )
+                    c, t = masked_accuracy_counts(outputs, labels, periods)
+                    val_correct += c
+                    val_total += t
         else:
             # Validate on a fresh set of on-the-fly trials
             with torch.no_grad():
@@ -410,9 +464,14 @@ def train_ctrnn(
                     val_losses.append(
                         masked_cross_entropy(outputs, labels).item()
                     )
+                    c, t = masked_accuracy_counts(outputs, labels)
+                    val_correct += c
+                    val_total += t
 
         avg_val = float(np.mean(val_losses))
+        avg_val_acc = val_correct / max(1, val_total)
         history['val_loss'].append(avg_val)
+        history['val_acc'].append(avg_val_acc)
 
         # ── Early stopping ──
         if avg_val < best_val_loss:
@@ -424,7 +483,8 @@ def train_ctrnn(
 
         if (epoch + 1) % 5 == 0 or epoch == 0:
             print(f"    Epoch [{epoch+1:03d}/{num_epochs}]  "
-                  f"train={avg_train:.4f}  val={avg_val:.4f}  "
+                  f"train_loss={avg_train:.4f}  val_loss={avg_val:.4f}  "
+                  f"train_acc={avg_train_acc:.3f}  val_acc={avg_val_acc:.3f}  "
                   f"patience={patience_counter}/{patience}")
 
         if patience_counter >= patience:
@@ -584,21 +644,28 @@ def _plot_pid_ax(ax, pid, title, stim_end=None):
 
 
 def plot_training_curves(histories, save_path):
-    """Plot train/val loss curves for both tasks side by side."""
-    fig, axes = plt.subplots(1, 2, figsize=(14, 4))
+    """Plot train/val loss and decision accuracy curves for both tasks."""
+    fig, axes = plt.subplots(2, 2, figsize=(14, 8))
     fig.suptitle('CTRNN Training Curves', fontsize=14, fontweight='bold')
 
-    for ax, (task_key, history) in zip(axes, histories.items()):
+    for ax_row, (task_key, history) in zip(axes.T, histories.items()):
         epochs = np.arange(1, len(history['train_loss']) + 1)
-        ax.plot(epochs, history['train_loss'],
-                color=PALETTE['train'], lw=2, label='Train loss')
-        ax.plot(epochs, history['val_loss'],
-                color=PALETTE['val'],   lw=2, ls='--', label='Val loss')
-        ax.set_title(f'{task_key.upper()} Task', fontsize=12, fontweight='bold')
-        ax.set_xlabel('Epoch')
-        ax.set_ylabel('Cross-entropy loss')
-        ax.legend(fontsize=9)
-        ax.grid(alpha=0.3)
+
+        ax_loss, ax_acc = ax_row
+        ax_loss.plot(epochs, history['train_loss'], color=PALETTE['train'], lw=2, label='Train loss')
+        ax_loss.plot(epochs, history['val_loss'], color=PALETTE['val'], lw=2, ls='--', label='Val loss')
+        ax_loss.set_title(f'{task_key.upper()} Task', fontsize=12, fontweight='bold')
+        ax_loss.set_xlabel('Epoch')
+        ax_loss.set_ylabel('Cross-entropy loss')
+        ax_loss.legend(fontsize=9)
+        ax_loss.grid(alpha=0.3)
+
+        ax_acc.plot(epochs, history['train_acc'], color=PALETTE['train'], lw=2, label='Train acc')
+        ax_acc.plot(epochs, history['val_acc'], color=PALETTE['val'], lw=2, ls='--', label='Val acc')
+        ax_acc.set_xlabel('Epoch')
+        ax_acc.set_ylabel('Decision accuracy')
+        ax_acc.set_ylim(0.0, 1.0)
+        ax_acc.grid(alpha=0.3)
 
     plt.tight_layout()
     plt.savefig(save_path, dpi=150, bbox_inches='tight')
@@ -736,6 +803,9 @@ def main(
             lr           = lr,
             patience     = patience,
         )
+        test_acc = compute_decision_accuracy(model, loaders[task_key]['test'], device)
+        history['test_acc'] = test_acc
+        print(f"  Test decision accuracy: {test_acc:.3f}")
         models[task_key]    = model
         histories[task_key] = history
 
@@ -855,6 +925,9 @@ def main(
     for task_key, history in histories.items():
         save_dict[f'{task_key}_train_loss'] = np.array(history['train_loss'])
         save_dict[f'{task_key}_val_loss']   = np.array(history['val_loss'])
+        save_dict[f'{task_key}_train_acc']  = np.array(history['train_acc'])
+        save_dict[f'{task_key}_val_acc']    = np.array(history['val_acc'])
+        save_dict[f'{task_key}_test_acc']   = np.array(history['test_acc'])
 
     np.savez_compressed(str(npz_path), **save_dict)
     print(f"\nRaw results → {npz_path}")
