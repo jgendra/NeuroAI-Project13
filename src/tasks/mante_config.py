@@ -71,7 +71,7 @@ MANTE_TEST_COHS = [0.9, 3.6, 15.0]
 
 # Mante's uniform distribution bound: 0.1875
 # Scaled by 100: 18.75
-UNIFORM_COHS = np.linspace(0.0, 18.75, 50).tolist()
+UNIFORM_COHS = np.linspace(0.0, 18.75, 200).tolist()
 
 CONFIG = {
     "task": "ContextDecisionMaking-v0",
