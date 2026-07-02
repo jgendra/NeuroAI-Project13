@@ -41,6 +41,7 @@ CONFIG = {
         "test_mante": 2000     # Specific Mante coherence testing
     },
     
-    "seed": 42,
+    "seed_train": 42,
+    "seed_val": 43,
     "output_dir": "data/"
 }
