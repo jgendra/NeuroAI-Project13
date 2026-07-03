@@ -37,7 +37,8 @@ def make_env(config: dict, seed: int, test_mode: str = "uniform") -> gym.Env:
 
     env.unwrapped.cohs = cohs
 
-    env.reset(seed=seed)
+    env.seed(seed)
+    env.reset()
     return env
 
 # In data_generator.py
@@ -102,8 +103,8 @@ def generate_split(
         trial_info = env.unwrapped.trial
         
         # In ContextDecisionMaking: Context 1 -> attend Modality 1, Context 2 -> attend Modality 2
-        # (Neurogym internal contexts are usually 1 or -1, or 0/1 depending on the version. We map to 1 and 2)
-        ctx = 1 if trial_info['context'] > 0 else 2
+        # (Neurogym internal contexts are 0/1. We map to 1 and 2)
+        ctx = 1 if trial_info['context'] == 0 else 2
         
         if is_perceptual:
             # TRUE PERCEPTUAL MASKING: Eliminate all dynamic routing.
@@ -114,8 +115,7 @@ def generate_split(
             
             # 2. If the original trial was a "Context 2" trial, 
             # move its stimulus data from channels 3/4 over to channels 1/2.
-            ng_ctx = trial_info['context']
-            if ng_ctx == 1:
+            if ctx == 2:
                 ob[:, 1:3] = ob[:, 3:5]
                 
             # 3. Permanently zero out the distractor channels (3 and 4)
@@ -134,7 +134,7 @@ def generate_split(
             labels[i, T:] = gt[-1]
             
         # Target Coherence (signed for Choice 1 / Choice 2)
-        coh = float(trial_info.get("coh_1", 0.0))
+        coh = float(trial_info.get("coh_1", 0.0)) if ctx == 1 else float(trial_info.get("coh_2", 0.0))
         target_choice = trial_info.get("ground_truth", 1)
         coherences[i] = coh if target_choice == 1 else -coh
         
@@ -152,15 +152,36 @@ def generate_split(
         "trial_periods": periods,
     }
 
+def generate_and_save(split_name, n_trials, seed, is_perceptual, out_dir, extract_coherences=False):
+    """Helper function to cleanly generate and save a specific split."""
+    if n_trials <= 0:
+        return
+        
+    print(f"\nProcessing Split: {split_name} ({n_trials} trials | Explicit Seed: {seed})")
+    
+    env = make_env(CONFIG, seed)
+    data = generate_split(env, n_trials, CONFIG["seq_len"], is_perceptual)
+    
+    path = os.path.join(out_dir, f"{split_name}.npz")
+    np.savez_compressed(path, **data)
+
+    if extract_coherences:
+        coherences = data['coherences']
+        path_coh = os.path.join(out_dir, f"{split_name}_coherences.npz")
+        np.savez_compressed(path_coh, coherences)
+
+    print(f"  Saved to {path} ({(os.path.getsize(path)/1e6):.1f} MB)")
+
 def main(args):
     # Update the master CONFIG with any CLI overrides
     CONFIG["dt"] = args.dt
     CONFIG["sigma"] = args.sigma
     CONFIG["splits"]["train"] = args.n_train
     CONFIG["splits"]["val"] = args.n_val
-    CONFIG["splits"]["test_uniform"] = args.n_test_uni
-    CONFIG["splits"]["test_mante"] = args.n_test_mante
-    CONFIG["seed"] = args.seed
+    CONFIG["splits"]["test_uniform"] = args.n_test
+    #CONFIG["splits"]["test_mante"] = args.n_test_mante
+    CONFIG["seed_train"] = args.seed_train
+    CONFIG["seed_val"] = args.seed_val
 
     # Allow saving to a custom directory (e.g., for tiny test runs)
     output_base = args.output_dir if args.output_dir else CONFIG["output_dir"]
@@ -171,23 +192,19 @@ def main(args):
     
     print(f"=== Generating {args.mode.upper()} Dataset ===")
     
-    rng = np.random.RandomState(CONFIG["seed"])
+    # 1. Generate Train Set
+    generate_and_save("train", CONFIG["splits"]["train"], CONFIG["seed_train"], is_perceptual, out_dir)
     
-    for split_name, n_trials in CONFIG["splits"].items():
-        if n_trials <= 0:
-            continue # Skip generation if user sets trials to 0
-
-        print(f"\nProcessing Split: {split_name} ({n_trials} trials)")
-        
-        seed = int(rng.randint(0, 2**31))
-        test_mode = "mante" if "mante" in split_name else "uniform"
-        env = make_env(CONFIG, seed, test_mode)
-        
-        data = generate_split(env, n_trials, CONFIG["seq_len"], is_perceptual)
-        
-        path = os.path.join(out_dir, f"{split_name}.npz")
-        np.savez_compressed(path, **data)
-        print(f"  Saved to {path} ({(os.path.getsize(path)/1e6):.1f} MB)")
+    # 2. Generate Validation Set
+    generate_and_save("val", CONFIG["splits"]["val"], CONFIG["seed_val"], is_perceptual, out_dir)
+    
+    # 3. Generate Multiple Test Sets (Seeds 1 through 10)
+    if CONFIG["splits"]["test_uniform"] > 0:
+        print(f"\nGenerating {args.n_test_sets} distinct Test Sets...")
+        for i in range(1, args.n_test_sets + 1):
+            split_name = f"test_{i:02d}"
+            test_seed = i  # Explicit seeds 1, 2, 3... 10
+            generate_and_save(split_name, CONFIG["splits"]["test_uniform"], test_seed, is_perceptual, out_dir, extract_coherences=True)
 
     # Save the final configuration as a readable JSON file
     config_save_path = os.path.join(out_dir, "config.json")
@@ -199,15 +216,18 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--mode", type=str, choices=["context", "perceptual"], required=True)
 
-    # CLI Overrides
-    parser.add_argument("--n_train", type=int, default=CONFIG["splits"]["train"], help="Number of training trials")
-    parser.add_argument("--n_val", type=int, default=CONFIG["splits"]["val"], help="Number of validation trials")
-    parser.add_argument("--n_test_uni", type=int, default=CONFIG["splits"]["test_uniform"], help="Number of uniform test trials")
-    parser.add_argument("--n_test_mante", type=int, default=CONFIG["splits"]["test_mante"], help="Number of Mante discrete test trials")
-    parser.add_argument("--dt", type=int, default=CONFIG["dt"], help="Integration timestep in ms")
-    parser.add_argument("--sigma", type=float, default=CONFIG["sigma"], help="Noise standard deviation")
-    parser.add_argument("--seed", type=int, default=CONFIG["seed"], help="Random seed")
-    parser.add_argument("--output_dir", type=str, default=None, help="Override output directory")
+    parser.add_argument("--n_train", type=int, default=CONFIG["splits"]["train"])
+    parser.add_argument("--n_val", type=int, default=CONFIG["splits"]["val"])
+    parser.add_argument("--n_test", type=int, default=CONFIG["splits"]["test_uniform"])
+    
+    # New Arguments for Explicit Seeding and Multiple Tests
+    parser.add_argument("--seed_train", type=int, default=42, help="Explicit seed for training set (has to be greater than n_test_sets!)")
+    parser.add_argument("--seed_val", type=int, default=43, help="Explicit seed for validation set (has to be greater than n_test_sets!)")
+    parser.add_argument("--n_test_sets", type=int, default=10, help="Number of distinct test sets to generate (seeds 1 to N)")
+    
+    parser.add_argument("--dt", type=int, default=CONFIG["dt"])
+    parser.add_argument("--sigma", type=float, default=CONFIG["sigma"])
+    parser.add_argument("--output_dir", type=str, default=None)
 
     args = parser.parse_args()
     main(args)
