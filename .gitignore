@@ -3,6 +3,10 @@
 *.npz
 data/
 
+# But track this specific folder
+!results/stimulus_coherences/**
+!results/stimulus_coherences/
+
 # Model weights
 weights/
 
@@ -327,3 +331,5 @@ $RECYCLE.BIN/
 
 # python-history when using pyenv
 .python-history
+
+# Track results/s
