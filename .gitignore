@@ -2,8 +2,7 @@
 # Generated Data
 *.npz
 data/
-
-# But track this specific folder
+# Track coherences in results
 !results/stimulus_coherences/**
 !results/stimulus_coherences/
 
@@ -332,4 +331,5 @@ $RECYCLE.BIN/
 # python-history when using pyenv
 .python-history
 
-# Track results/s
+# Ignore LLM files
+.claude/
