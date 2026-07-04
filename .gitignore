@@ -2,6 +2,9 @@
 # Generated Data
 *.npz
 data/
+# Track coherences in results
+!results/stimulus_coherences/**
+!results/stimulus_coherences/
 
 # Model weights
 weights/
@@ -327,3 +330,6 @@ $RECYCLE.BIN/
 
 # python-history when using pyenv
 .python-history
+
+# Ignore LLM files
+.claude/

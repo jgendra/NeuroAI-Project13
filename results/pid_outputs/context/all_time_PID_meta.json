@@ -1,0 +1,23 @@
+{
+  "array_file": "all_time_PID.npy",
+  "shape": [
+    10,
+    115,
+    5
+  ],
+  "axes": [
+    "seed 0..9 = CTRNN_01..CTRNN_10",
+    "timestep 0..114 (10 ms each)",
+    "atom"
+  ],
+  "atom_order": [
+    "total_mi",
+    "redundancy",
+    "unique1",
+    "unique2",
+    "synergy"
+  ],
+  "units": "bits",
+  "decision_t": 104,
+  "note": "Gaussian MMI-PID, bipartition-averaged over 200 random 50/50 unit splits (seed=0). total_mi = redundancy+unique1+unique2+synergy."
+}
