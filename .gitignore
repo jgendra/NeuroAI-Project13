@@ -1,7 +1,7 @@
 ### Manual additions
 # Generated Data
 *.npz
-*.json
+data/
 
 # Model weights
 weights/
