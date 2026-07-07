@@ -1,0 +1,18 @@
+test,task,atom,n,statistic,p_value,alpha_corrected,bonferroni_factor,pass_normality,context_mean,context_sd,metric,p_value_bonferroni,perceptual_mean,perceptual_sd,significant
+Mann-Whitney U (context vs perceptual) @ DECISION_T,context_vs_perceptual,redundancy,10,100.0,0.00018267179110955002,,5,,1.2641150179864895,0.02124018227713285,,0.00091335895554775,0.757851896060745,0.016684824185023546,True
+Mann-Whitney U (context vs perceptual) @ DECISION_T,context_vs_perceptual,synergy,10,100.0,0.00018267179110955002,,5,,0.017791199905259604,0.0029193809402885454,,0.00091335895554775,0.006640350031623792,0.0008634746685050364,True
+Mann-Whitney U (context vs perceptual) @ DECISION_T,context_vs_perceptual,total_mi,10,100.0,0.00018267179110955002,,5,,1.2857052834231244,0.021819950952331874,,0.00091335895554775,0.7661760999166092,0.01722432975571548,True
+Mann-Whitney U (context vs perceptual) @ DECISION_T,context_vs_perceptual,unique1,10,100.0,0.00018267179110955002,,5,,0.0019611149816804213,0.00045657116057307834,,0.00091335895554775,0.0008350768352851616,0.0002326008003420919,True
+Mann-Whitney U (context vs perceptual) @ DECISION_T,context_vs_perceptual,unique2,10,100.0,0.00018267179110955002,,5,,0.001837950549694823,0.00026609617375868085,,0.00091335895554775,0.0008487769889552183,0.00020288357420657427,True
+Mann-Whitney U (context vs perceptual),,,10,40.0,0.47267559351158717,,,,,,test_acc,,,,False
+Mann-Whitney U (context vs perceptual),,,10,71.0,0.12122450301291662,,,,,,test_loss,,,,False
+Shapiro-Wilk normality,context,redundancy,10,0.9261686343911103,0.4112809546743573,0.005,10,True,,,,,,,
+Shapiro-Wilk normality,context,synergy,10,0.9466823957673373,0.6294466435510179,0.005,10,True,,,,,,,
+Shapiro-Wilk normality,context,total_mi,10,0.9478775026204662,0.6434603008331271,0.005,10,True,,,,,,,
+Shapiro-Wilk normality,context,unique1,10,0.8009347818244001,0.014882758460893125,0.005,10,True,,,,,,,
+Shapiro-Wilk normality,context,unique2,10,0.8966025719990849,0.20098014804087477,0.005,10,True,,,,,,,
+Shapiro-Wilk normality,perceptual,redundancy,10,0.8175911178877256,0.02369742866239268,0.005,10,True,,,,,,,
+Shapiro-Wilk normality,perceptual,synergy,10,0.858814263199,0.07388954212431571,0.005,10,True,,,,,,,
+Shapiro-Wilk normality,perceptual,total_mi,10,0.819625665166434,0.02507926696925596,0.005,10,True,,,,,,,
+Shapiro-Wilk normality,perceptual,unique1,10,0.9060384879515353,0.2548725182315986,0.005,10,True,,,,,,,
+Shapiro-Wilk normality,perceptual,unique2,10,0.8228128964463575,0.02740558934076622,0.005,10,True,,,,,,,
