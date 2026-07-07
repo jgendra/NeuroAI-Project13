@@ -62,7 +62,9 @@ import neurogym as ngym
 # ──────────────────────────────────────────────────────────────────────────────
 # Project module imports
 # ──────────────────────────────────────────────────────────────────────────────
-sys.path.append(str(Path(__file__).resolve().parents[3]))
+PROJECT_ROOT = Path(__file__).resolve().parents[2]
+if str(PROJECT_ROOT) not in sys.path:
+    sys.path.insert(0, str(PROJECT_ROOT))
 
 try:
     from src.models.ctrnn import CTRNN as _ProjectCTRNN
@@ -80,7 +82,7 @@ print(f"Using project modules: {_USING_PROJECT_MODULES}")
 # ──────────────────────────────────────────────────────────────────────────────
 
 
-RESULTS_DIR = Path(r"E:\TUM\3sem\NeuroAI\project\github_neuroai\results")
+RESULTS_DIR = Path(__file__).resolve().parent / "results"
 
 WEIGHTS_DIR  = RESULTS_DIR / 'weights'
 WEIGHTS_DIR.mkdir(parents=True, exist_ok=True)
@@ -812,7 +814,7 @@ def main(
     # ── Plot training curves ──
     plot_training_curves(
         histories,
-        save_path=RESULTS_DIR / 'training_curves.png'
+        save_path=RESULTS_DIR / f'training_curves_{hidden_size}.png'
     )
 
     # ── Extract hidden states and run PID ──
@@ -878,7 +880,7 @@ def main(
             obs_pad = np.zeros((n_test_trials, max_T, F), dtype=np.float32)
             gt_pad  = np.zeros((n_test_trials, max_T), dtype=np.int64)
             per_pad = np.zeros((n_test_trials, max_T), dtype=np.int8)
-            for i, (ob, gt, per) in enumerate(zip(obs_l, gt_l, per_l)):
+            for i, (ob, gt, per) in enumezrate(zip(obs_l, gt_l, per_l)):
                 T = ob.shape[0]
                 obs_pad[i, :T] = ob
                 gt_pad[i,  :T] = gt
@@ -905,17 +907,17 @@ def main(
         # Per-task plot
         plot_pid_single_task(
             pid_results, task_key, hidden_size,
-            save_path=RESULTS_DIR / f'pid_{task_key}.png'
+            save_path=RESULTS_DIR / f'pid_{task_key}_{hidden_size}.png'
         )
 
     # ── 4-panel comparison ──
     plot_comparison_4panel(
         all_pid, hidden_size,
-        save_path=RESULTS_DIR / 'comparison_4panel.png'
+        save_path=RESULTS_DIR / f'comparison_4panel_{hidden_size}.png'
     )
 
     # ── Save raw results ──
-    npz_path = RESULTS_DIR / 'results.npz'
+    npz_path = RESULTS_DIR / f'results_{hidden_size}.npz'
     save_dict = {}
     for task_key, pid_results in all_pid.items():
         for tgt, data in pid_results.items():
@@ -923,11 +925,11 @@ def main(
                 save_dict[f'{task_key}_{tgt}_{atom}'] = data[atom]
             save_dict[f'{task_key}_{tgt}_stim_end'] = np.array(data['stim_end'])
     for task_key, history in histories.items():
-        save_dict[f'{task_key}_train_loss'] = np.array(history['train_loss'])
-        save_dict[f'{task_key}_val_loss']   = np.array(history['val_loss'])
-        save_dict[f'{task_key}_train_acc']  = np.array(history['train_acc'])
-        save_dict[f'{task_key}_val_acc']    = np.array(history['val_acc'])
-        save_dict[f'{task_key}_test_acc']   = np.array(history['test_acc'])
+        save_dict[f'{task_key}_{hidden_size}_train_loss'] = np.array(history['train_loss'])
+        save_dict[f'{task_key}_{hidden_size}_val_loss']   = np.array(history['val_loss'])
+        save_dict[f'{task_key}_{hidden_size}_train_acc']  = np.array(history['train_acc'])
+        save_dict[f'{task_key}_{hidden_size}_val_acc']    = np.array(history['val_acc'])
+        save_dict[f'{task_key}_{hidden_size}_test_acc']   = np.array(history['test_acc'])
 
     np.savez_compressed(str(npz_path), **save_dict)
     print(f"\nRaw results → {npz_path}")
@@ -952,7 +954,7 @@ if __name__ == '__main__':
     p.add_argument('--lr',             type=float, default=1e-3)
     p.add_argument('--batch_size',     type=int,   default=2048)
     p.add_argument('--n_test_trials',  type=int,   default=2000)
-    p.add_argument('--n_bipartitions', type=int,   default=200)
+    p.add_argument('--n_bipartitions', type=int,   default=400)
     args = p.parse_args()
 
 for h in args.hidden_sizes:
