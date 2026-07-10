@@ -72,7 +72,8 @@ We compute PID on the hidden-state activations $h_t$ using the final discrete de
 * **Attractor Dynamics:** Because the network forms discrete point attractors to solve the classification task, our PID estimator is blind to continuous stimulus magnitude prior to commitment.
 
 ## 5. References
-* Williams & Beer (2010), *Nonnegative Decomposition of Multivariate Information* 
-* Luppi, Mediano et al. (2022), *A synergistic core for human brain evolution and cognition* 
-* Mante, Sussillo, Shenoy & Newsome (2013), *Context-dependent computation by recurrent dynamics in PFC* 
-* Sussillo & Barak (2013), *Opening the black box: reverse-engineering RNN dynamics* ````
+* Luppi, A. I., Mediano, P. A., Rosas, F. E., Holland, N., Fryer, T. D., O’Brien, J. T., ... & Stamatakis, E. A. (2022). A synergistic core for human brain evolution and cognition. Nature neuroscience, 25(6), 771-782. DOI: https://doi.org/10.1038/s41593-022-01070-0.
+* Mante, V., Sussillo, D., Shenoy, K. V., & Newsome, W. T. (2013). Context-dependent computation by recurrent dynamics in prefrontal cortex. Nature, 503(7474), 78-84. DOI: https://doi.org/10.1038/nature12742.
+### 5.1. Methods references
+* Williams, P. L., & Beer, R. D. (2010). Nonnegative decomposition of multivariate information. arXiv preprint arXiv:1004.2515. DOI: https://doi.org/10.48550/arXiv.1004.2515.
+* Barrett, A. B. (2015). Exploration of synergistic and redundant information sharing in static and dynamical Gaussian systems. Physical Review E, 91(5), 052802. DOI: https://doi.org/10.1103/PhysRevE.91.052802.
