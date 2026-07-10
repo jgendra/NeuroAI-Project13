@@ -68,7 +68,7 @@ pip install -e .
 0. **Dataset generation:** The datasets have to be generated to use the notebooks. They are pre-configured in `src/tasks/mante_config.py` and will be saved into the relative `data/[task]` directory. To reproduce our results run `python src/tasks/data_generator.py --mode context` and `python src/tasks/data_generator.py --mode perceptual`. If you use the provided model weights (without retraining) one can ommit the train and validation set generation by providing the extra parameters `--n_train 0 --n_val 0`. For further details have a look at `src/tasks/README_data.md`.
 1. **Train the models:** Run the full sweep (20 RNNs) via notebook `notebooks/05_Full_train_pipeline.ipynb`. The weights will be saved to `results/model_weights/[task]` and are already delivered as pre-computed *(Expected runtime: ~2 hours on a standard GPU).*
 2. **Compute PID:** Extract information metrics via notebook `notebooks/06_Full_PID_analysis_pipeline.ipynb`. *(Expected runtime: ~10 minute on CPU, <1 minute on GPU).*
-3. **Generate Figures:** Both notebooks will populate the `figures/` directory with the exact plots used in our final presentation.
+3. **Generate Figures:** Notebooks `notebooks/05_Full_train_pipeline.ipynb` and `notebooks/06_Full_PID_analysis_pipeline.ipynb` will populate the `figures/` directory with the exact plots used in our final presentation, together with a summary of all statistical test results `stats_summary.csv`.
 
 *Note: Please be aware of custom Paths and change them accordingly in your notebooks! Also adapt the Batchsize when training to fit your Hardware!*
 
