@@ -1,0 +1,23 @@
+test,task,atom,n,statistic,p_value,bonferroni_factor,pass_normality,context_mean,context_sd,family,metric,p_value_bonferroni,perceptual_mean,perceptual_sd,significant
+Mann-Whitney U (context vs perceptual) @ DECISION_T,context_vs_perceptual,norm_redundancy,10,1.0,0.00024612812790522973,4,,0.9832132320274175,0.002654289569790453,comparison_normalized,,0.000984512511620919,0.9891454430322556,0.0012657517886960762,True
+Mann-Whitney U (context vs perceptual) @ DECISION_T,context_vs_perceptual,norm_synergy,10,99.0,0.00024612812790522973,4,,0.013833395685355854,0.0022168887440027975,comparison_normalized,,0.000984512511620919,0.00866106974925947,0.0010433081164361964,True
+Mann-Whitney U (context vs perceptual) @ DECISION_T,context_vs_perceptual,norm_unique,10,88.0,0.004586392080253494,2,,0.002953372287226628,0.00047341325858474997,magnitude_normalized,,0.009172784160506988,0.0021934872184848414,0.0005152299989476812,True
+Mann-Whitney U (context vs perceptual) @ DECISION_T,context_vs_perceptual,norm_unique1,10,88.0,0.004586392080253494,4,,0.0015229403639865128,0.0003376645432328494,comparison_normalized,,0.018345568321013975,0.0010875788081281435,0.0002935144713138629,True
+Mann-Whitney U (context vs perceptual) @ DECISION_T,context_vs_perceptual,norm_unique2,10,85.0,0.009108496398030963,4,,0.0014304319232401148,0.0002128060438472774,comparison_normalized,,0.03643398559212385,0.0011059084103566986,0.0002530069343795782,True
+Mann-Whitney U (context vs perceptual) @ DECISION_T,context_vs_perceptual,redundancy,10,100.0,0.00018267179110955002,4,,1.2641150179864895,0.02124018227713285,comparison,,0.0007306871644382001,0.757851896060745,0.016684824185023546,True
+Mann-Whitney U (context vs perceptual) @ DECISION_T,context_vs_perceptual,synergy,10,100.0,0.00018267179110955002,4,,0.017791199905259604,0.0029193809402885454,comparison,,0.0007306871644382001,0.006640350031623792,0.0008634746685050364,True
+Mann-Whitney U (context vs perceptual) @ DECISION_T,context_vs_perceptual,total_mi,10,100.0,0.00018267179110955002,1,,1.2857052834231244,0.021819950952331874,magnitude,,0.00018267179110955002,0.7661760999166092,0.01722432975571548,True
+Mann-Whitney U (context vs perceptual) @ DECISION_T,context_vs_perceptual,unique1,10,100.0,0.00018267179110955002,4,,0.0019611149816804213,0.00045657116057307834,comparison,,0.0007306871644382001,0.0008350768352851616,0.0002326008003420919,True
+Mann-Whitney U (context vs perceptual) @ DECISION_T,context_vs_perceptual,unique2,10,100.0,0.00018267179110955002,4,,0.001837950549694823,0.00026609617375868085,comparison,,0.0007306871644382001,0.0008487769889552183,0.00020288357420657427,True
+Mann-Whitney U (context vs perceptual),,,10,40.0,0.47267559351158717,,,,,,test_acc,,,,False
+Mann-Whitney U (context vs perceptual),,,10,71.0,0.12122450301291662,,,,,,test_loss,,,,False
+Shapiro-Wilk normality,context,redundancy,10,0.9261686343911103,0.4112809546743573,8,True,,,,,1.0,,,
+Shapiro-Wilk normality,context,synergy,10,0.9466823957673373,0.6294466435510179,8,True,,,,,1.0,,,
+Shapiro-Wilk normality,context,total_mi,10,0.9478775026204662,0.6434603008331271,1,True,,,,,0.6434603008331271,,,
+Shapiro-Wilk normality,context,unique1,10,0.8009347818244001,0.014882758460893125,8,True,,,,,0.119062067687145,,,
+Shapiro-Wilk normality,context,unique2,10,0.8966025719990849,0.20098014804087477,8,True,,,,,1.0,,,
+Shapiro-Wilk normality,perceptual,redundancy,10,0.8175911178877256,0.02369742866239268,8,True,,,,,0.18957942929914143,,,
+Shapiro-Wilk normality,perceptual,synergy,10,0.858814263199,0.07388954212431571,8,True,,,,,0.5911163369945257,,,
+Shapiro-Wilk normality,perceptual,total_mi,10,0.819625665166434,0.02507926696925596,1,False,,,,,0.02507926696925596,,,
+Shapiro-Wilk normality,perceptual,unique1,10,0.9060384879515353,0.2548725182315986,8,True,,,,,1.0,,,
+Shapiro-Wilk normality,perceptual,unique2,10,0.8228128964463575,0.02740558934076622,8,True,,,,,0.21924471472612975,,,
