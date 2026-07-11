@@ -520,9 +520,9 @@ def gaussian_pid_rnn_gpu(H, Y, n_bip=200, seed=0, reg=1e-5, device=None):
 
 
 # ----------------------------------------------------------------------------- #
-# GPU-accelerated one-vs-others PID: every unit against all other units
+# One-vs-others PID (GPU-accelerated): every unit against all other units
 # ----------------------------------------------------------------------------- #
-def gaussian_pid_gpu_one2many(H, Y, timestep=None, reg=1e-5, device=None):
+def gaussian_pid_one2many_gpu(H, Y, timestep=None, reg=1e-5, device=None):
     """
     GPU-batched Gaussian analytic MMI-PID of every RNN unit against all the
     others ("one-vs-others"), at one timestep or across all timesteps.
@@ -597,12 +597,12 @@ def gaussian_pid_gpu_one2many(H, Y, timestep=None, reg=1e-5, device=None):
     How to call
     -----------
     # One-vs-others PID for every unit at the last timestep (trials as samples):
-    >>> out = gaussian_pid_gpu_one2many(acts, stim, timestep=-1)  # acts: (trials, T, units)
+    >>> out = gaussian_pid_one2many_gpu(acts, stim, timestep=-1)  # acts: (trials, T, units)
     >>> out['unique1'].shape                                      # (U,)
     >>> out['unique1']            # each unit's own unique information (bits)
 
     # Full time-resolved one-vs-others profile (every unit, every timestep):
-    >>> prof = gaussian_pid_gpu_one2many(acts, stim, timestep=None)
+    >>> prof = gaussian_pid_one2many_gpu(acts, stim, timestep=None)
     >>> prof['synergy'].shape                                     # (T, U)
     >>> prof['synergy'][:, 3]     # synergy of unit 3 with the others, over time
     """
