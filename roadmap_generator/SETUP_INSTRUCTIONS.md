@@ -1,11 +1,11 @@
-# NeuroAI Project 13 — GitHub Roadmap Setup
+# NeuroAI Project 13: GitHub Roadmap Setup
 
 This sets up a full GitHub Project (v2) roadmap for the project: a **Roadmap (Gantt)**
-tab, a **Kanban Board** tab, and a **Table** tab — all populated with 34 tasks, notes,
+tab, a **Kanban Board** tab, and a **Table** tab, all populated with 34 tasks, notes,
 your 3 deadlines, labels and priorities.
 
 The `setup_roadmap.py` script does ~95% automatically. The only manual part is
-**creating the 3 view tabs** (~5 minutes of clicks) — GitHub's API genuinely has no way
+**creating the 3 view tabs** (5 minutes of clicks); GitHub's API genuinely has no way
 to create views, so *no* tool or account connection could automate that step.
 
 ---
@@ -27,30 +27,30 @@ GITHUB_TOKEN=ghp_yourtokenhere python3 setup_roadmap.py
 
 …or just `python3 setup_roadmap.py` and paste the token when prompted.
 
-Pure standard library — no `pip install` needed. Re-running is safe: it skips labels,
+Pure standard library: no `pip install` needed. Re-running is safe: it skips labels,
 milestones, issues and fields that already exist.
 
 > If your repo path differs, edit `REPO_OWNER` / `REPO_NAME` at the top of the script.
 
 When it finishes it prints a link to your new project.
 
-## 3. Create the 3 view tabs (~5 min)
+## 3. Create the 3 view tabs (5 min)
 
 Open the project. Next to the view tabs there's a **`+`**. Add each view:
 
-### Tab 1 — Roadmap (your main Gantt view)
+### Tab 1: Roadmap (your main Gantt view)
 - `+` → **New view** → Layout: **Roadmap**
 - In the view’s date control (top-right): **Start date field = `Start`**, **Target date field = `End`**
 - *(optional)* Group by **`Phase`**; turn on **Markers → Milestones** to show your 3 deadlines as vertical lines
 - Zoom: **Month**
 - Double-click the tab name → rename to **Roadmap**
 
-### Tab 2 — Board (Kanban: To Do / Doing / Review / Done)
+### Tab 2: Board (Kanban: To Do / Doing / Review / Done)
 - `+` → **New view** → Layout: **Board**
 - **Group by → `Workflow`**
 - Rename the tab to **Board**
 
-### Tab 3 — Table (by stage, like github/roadmap)
+### Tab 3: Table (by stage, like github/roadmap)
 - `+` → **New view** → Layout: **Table**
 - **Group by → `Phase`**
 - **Sort by → `Start`** (ascending)
@@ -64,9 +64,9 @@ Open the project. Next to the view tabs there's a **`+`**. Add each view:
 **Custom fields:** `Phase` (5 stages), `Workflow` (Kanban status), `Priority`, `Start`, `End`.
 
 **Milestones (your deadlines):**
-- Final roadmap submission — **8 June 2026**
-- Midway presentation — **17 June 2026**
-- Final presentation — **15 July 2026**
+- Final roadmap submission: **8 June 2026**
+- Midway presentation: **17 June 2026**
+- Final presentation: **15 July 2026**
 
 **Stages:**
 - 0 · Setup & Planning (6 tasks)
@@ -79,7 +79,7 @@ The two completed tasks (proposal + first-draft roadmap) are pre-marked **Done**
 
 ## Notes built into the schedule
 - **Compute:** training 30 small 80-unit CTRNNs is laptop-friendly (minutes each, batch
-  overnight). The real cost is PID/ΦID — so PID is kept tractable via 2 subpopulations,
+  overnight). The real cost is PID/ΦID; so PID is kept tractable via 2 subpopulations,
   and **ΦID + Fisher info are flagged as stretch/optional**, matching the proposal.
 - A **buffer week** before the final presentation is intentionally protected.
 - For the **8 June** submission: screenshot the Roadmap tab and export/print it.
