@@ -416,8 +416,9 @@ def gaussian_pid_rnn(activations, target,
     return result
 
 
-
-
+# ----------------------------------------------------------------------------- #
+# GPU-accelerated, time-resolved PID over RNN activations
+# ----------------------------------------------------------------------------- #
 def gaussian_pid_rnn_gpu(H, Y, n_bip=200, seed=0, reg=1e-5, device=None):
     """
     GPU-batched, time-resolved Gaussian analytic MMI-PID over RNN activations.
@@ -494,12 +495,13 @@ def gaussian_pid_rnn_gpu(H, Y, n_bip=200, seed=0, reg=1e-5, device=None):
     mi_joint = 0.5 * (ld_units + ld_y - ld_full)                     # I(X1,X2;Y), same all splits
 
     # index tensors for the per-split source blocks (+ target column appended)
-    i1  = torch.as_tensor(idx1, device=dev)
-    i2  = torch.as_tensor(idx2, device=dev)
+    i1  = torch.as_tensor(idx1, device=dev)                           # group1 indices (B, k1)
+    i2  = torch.as_tensor(idx2, device=dev)                           # group2 indices (B, k2)
     i1y = torch.cat([i1, torch.full((n_bip, 1), iy, device=dev)], 1)  # group1 + target
     i2y = torch.cat([i2, torch.full((n_bip, 1), iy, device=dev)], 1)  # group2 + target
 
-    out = np.zeros((T, 5))
+    # --- loop over timesteps, compute per-split logdet sub-blocks, then MMI atoms ---
+    out = np.zeros((T, 5))                      # (timesteps, [total, red, u1, u2, syn])              
     for t in range(T):                          # loop timesteps -> tiny per-step GPU memory
         c = cov[t]
         def bld(idx):                           # batched logdet of (B,k,k) sub-blocks
@@ -515,3 +517,183 @@ def gaussian_pid_rnn_gpu(H, Y, n_bip=200, seed=0, reg=1e-5, device=None):
         for j, v in enumerate([tot, red, u1, u2, syn]):
             out[t, j] = v.mean().item() * NATS_TO_BITS
     return out
+
+
+# ----------------------------------------------------------------------------- #
+# GPU-accelerated one-vs-others PID: every unit against all other units
+# ----------------------------------------------------------------------------- #
+def gaussian_pid_gpu_one2many(H, Y, timestep=None, reg=1e-5, device=None):
+    """
+    GPU-batched Gaussian analytic MMI-PID of every RNN unit against all the
+    others ("one-vs-others"), at one timestep or across all timesteps.
+
+    Where `gaussian_pid_rnn_gpu` averages the four MMI atoms over many random
+    balanced (50/50) bipartitions, this function instead evaluates a single,
+    fixed 1-vs-(U-1) bipartition for each unit in turn. For a population of
+    U units and a given timestep, unit i is decomposed as
+
+        source X1 = unit i                     (1-D, the single unit)
+        source X2 = the remaining (U-1) units  ((U-1)-D, everyone else)
+        target  Y = the (univariate) stimulus  (e.g. signed cued coherence)
+
+    and the standard Williams & Beer / Barrett-MMI atoms are returned for that
+    unit. There is therefore no averaging over bipartitions: the output keeps a
+    per-unit axis so you can read, unit by unit, how much information that unit
+    carries uniquely, redundantly, or synergistically with the rest of the net.
+
+    Speed trick (same idea as `gaussian_pid_rnn_gpu`)
+    ----------------------------------------------------------
+    At a given timestep the joint covariance over [all units | target] is the
+    same regardless of which unit is singled out, so it is formed ONCE per
+    timestep on the GPU. All U one-vs-others decompositions then reduce to cheap,
+    batched log-determinants of sub-blocks of that single shared covariance:
+      1) I(unit i ; Y)         -> a 1x1 and a 2x2 sub-block (vectorized over i),
+      2) I(others_i ; Y)       -> a (U-1)x(U-1) and a UxU sub-block, batched over i,
+      3) I(all units ; Y)      -> computed once, shared by every i.
+    As in `gaussian_pid`, each column is standardized to unit variance (MI is
+    invariant to this; it only conditions the covariance) and a `reg` ridge is
+    added to the covariance diagonal before the closed-form Gaussian MIs and the
+    MMI atoms (Barrett 2015) are computed.
+
+    The function is written to be independent of the population size U, so it
+    works unchanged for RNNs smaller or larger than the default 100 units.
+
+    Parameters
+    ----------
+    H : array_like, shape (n_samples, n_timesteps, n_units)
+        Hidden activations. `n_samples` (trials) is the axis over which the
+        per-timestep covariance is estimated; `n_units` (= U) may be any size >= 2.
+    Y : array_like, shape (n_samples,)
+        Univariate target (e.g. signed coherence / stimulus): one value per trial,
+        shared across timesteps.
+    timestep : int or None, optional
+        int  -> compute the one-vs-rest PID only at this timestep (supports
+                  negative indexing, e.g. -1 = last timestep). Per-unit arrays of
+                  shape (n_units,) are returned.
+        None -> compute it at every timestep. Per-unit/-timestep arrays of shape
+                  (n_timesteps, n_units) are returned.
+    reg : float, optional
+        Ridge added to the covariance diagonal for conditioning (the GPU analogue
+        of `gaussian_pid`'s `regularization`).
+    device : torch.device or str or None, optional
+        Torch device to run on. None (default) selects CUDA if available, else CPU.
+
+    Returns
+    -------
+    dict with keys (all values are numpy arrays, in BITS):
+        'redundancy', 'unique1', 'unique2', 'synergy' : the four MMI atoms, where
+            'unique1' is the information the singled-out unit carries uniquely and
+            'unique2' is what the remaining (U-1) units carry uniquely.
+        'mi_1'     = I(unit i ; Y)             (the single unit vs target)
+        'mi_2'     = I(others_i ; Y)           (all other units vs target)
+        'mi_joint' = I(all units ; Y)          (same for every unit at a timestep)
+        'total'    = redundancy + unique1 + unique2 + synergy   (equals mi_joint
+                     up to rounding; a built-in consistency check)
+    For `timestep=int` each array has shape (n_units,); for `timestep=None` each
+    array has shape (n_timesteps, n_units). This mirrors `gaussian_pid_rnn_gpu`'s
+    per-timestep/per-atom layout but adds the extra per-unit axis, and uses the
+    clearly-named dictionary keys of `gaussian_pid_rnn`.
+
+    How to call
+    -----------
+    # One-vs-others PID for every unit at the last timestep (trials as samples):
+    >>> out = gaussian_pid_gpu_one2many(acts, stim, timestep=-1)  # acts: (trials, T, units)
+    >>> out['unique1'].shape                                      # (U,)
+    >>> out['unique1']            # each unit's own unique information (bits)
+
+    # Full time-resolved one-vs-others profile (every unit, every timestep):
+    >>> prof = gaussian_pid_gpu_one2many(acts, stim, timestep=None)
+    >>> prof['synergy'].shape                                     # (T, U)
+    >>> prof['synergy'][:, 3]     # synergy of unit 3 with the others, over time
+    """
+    # --- 1. validate activations and unpack the three axes ------------------- #
+    H = np.asarray(H, dtype=float)                   # to float ndarray
+    if H.ndim != 3:                                  # this path needs the 3-D view
+        raise ValueError("H must be (n_samples, n_timesteps, n_units); "
+                         f"got shape {H.shape}.")
+    N, T, U = H.shape                                # samples, timesteps, units
+    if U < 2:                                        # need at least one "other" unit
+        raise ValueError(f"need n_units >= 2 for a 1-vs-others partition; got {U}.")
+    if N <= U + 1:                                   # full-rank covariance over [units|Y]
+        raise ValueError(f"need n_samples ({N}) > n_units + 1 ({U + 1}) "
+                         "for a full-rank covariance estimate.")
+
+    # --- 2. resolve which timestep(s) to evaluate ---------------------------- #
+    if timestep is None:                             # all timesteps requested
+        t_indices = list(range(T))                   # evaluate every step
+        single = False                               # -> return (T, U) arrays
+    else:                                            # one specific timestep
+        t = timestep if timestep >= 0 else T + timestep   # resolve negative index
+        if not (0 <= t < T):                         # bounds check after resolving
+            raise IndexError(f"timestep {timestep} out of range for {T} timesteps.")
+        t_indices = [t]                              # evaluate just this one
+        single = True                                # -> return (U,) arrays
+    Tsel = len(t_indices)                            # number of timesteps we output
+
+    # pick CUDA when available unless the caller forced a device
+    dev = torch.device("cuda" if torch.cuda.is_available() else "cpu") if device is None else device
+
+    # --- 3. standardize columns to unit std (ddof=1); MI is scale-invariant,
+    #        this only conditions the covariance (matches gaussian_pid_rnn_gpu) --- #
+    Ht = torch.tensor(H[:, t_indices, :], dtype=torch.float64, device=dev)     # (N, Tsel, U)
+    Yt = torch.tensor(np.asarray(Y, float), dtype=torch.float64, device=dev)   # (N,)
+    Ht = Ht / Ht.std(dim=0, keepdim=True, unbiased=True).clamp_min(1e-12)      # per-unit unit std
+    Yt = Yt / Yt.std(unbiased=True).clamp_min(1e-12)                           # target unit std
+
+    # --- 4. one joint covariance per (selected) timestep over [units | target] -- #
+    D  = torch.cat([Ht, Yt[:, None, None].expand(N, Tsel, 1)], dim=2)          # (N, Tsel, U+1)
+    Dc = D - D.mean(dim=0, keepdim=True)                                       # center each column
+    cov = torch.einsum('nti,ntj->tij', Dc, Dc) / (N - 1)                       # sample cov (ddof=1)
+    cov = cov + reg * torch.eye(U + 1, dtype=torch.float64, device=dev)        # ridge (matches reg)
+    iy = U                                                                     # target column index
+
+    # --- 5. index sets for the fixed 1-vs-others partitions (unit-only, reused all t) -- #
+    units = torch.arange(U, device=dev)                                        # 0..U-1 unit indices
+    mask  = ~torch.eye(U, dtype=torch.bool, device=dev)                        # (U,U): False on diagonal
+    rest  = units.expand(U, U)[mask].view(U, U - 1)                            # (U, U-1): "others" of each unit
+    rest_y = torch.cat([rest, torch.full((U, 1), iy, device=dev)], dim=1)      # (U, U): others + target column
+
+    # --- 6. accumulate per-timestep, per-unit atoms (converted to bits) ------- #
+    keys = ["redundancy", "unique1", "unique2", "synergy", "mi_1", "mi_2", "mi_joint", "total"]
+    out = {k: np.zeros((Tsel, U)) for k in keys}     # (Tsel, U) buffers, one per quantity
+
+    for ti in range(Tsel):                           # loop timesteps -> tiny per-step GPU memory
+        c = cov[ti]                                  # (U+1, U+1) shared covariance at this timestep
+        ld_y = torch.log(c[iy, iy])                  # logdet of the 1x1 target block (scalar)
+
+        # I(all units ; Y): identical for every unit at this timestep (computed once)
+        ld_units = torch.linalg.slogdet(c[:U, :U])[1]         # logdet all-units block
+        ld_full  = torch.linalg.slogdet(c)[1]                 # logdet full [units|Y] joint
+        mij = 0.5 * (ld_units + ld_y - ld_full)               # I(X1,X2;Y), scalar
+
+        # I(unit i ; Y) for every i at once: 1x1 unit block and 2x2 [i,y] block
+        var_i  = c[units, units]                              # (U,) each unit's variance = cov[i,i]
+        cov_iy = c[units, iy]                                 # (U,) each unit's covariance with Y
+        ld_ii  = torch.log(var_i)                             # (U,) logdet of the 1x1 unit block
+        ld_iy  = torch.log(var_i * c[iy, iy] - cov_iy ** 2)   # (U,) logdet of the 2x2 [i,y] block
+        mi1 = 0.5 * (ld_ii + ld_y - ld_iy)                    # (U,) I(unit i ; Y) per unit
+
+        # I(rest_i ; Y) for every i at once: batched (U-1)x(U-1) and UxU sub-blocks
+        sub_rest  = c[rest[:, :, None],  rest[:, None, :]]        # (U, U-1, U-1) "others" blocks
+        sub_resty = c[rest_y[:, :, None], rest_y[:, None, :]]     # (U, U,   U)   "others"+target blocks
+        ld_rest  = torch.linalg.slogdet(sub_rest)[1]             # (U,) logdet of each others block
+        ld_resty = torch.linalg.slogdet(sub_resty)[1]            # (U,) logdet of each others+target block
+        mi2 = 0.5 * (ld_rest + ld_y - ld_resty)                  # (U,) I(rest_i ; Y) per unit
+
+        # MMI atoms (Barrett 2015), per unit; mij is scalar and broadcasts over units
+        red = torch.minimum(mi1, mi2)                # (U,) MMI redundancy = smaller source-target MI
+        u1  = mi1 - red                              # (U,) the single unit's unique info (>=0)
+        u2  = mi2 - red                              # (U,) the rest's unique info (>=0)
+        syn = mij - mi1 - mi2 + red                  # (U,) synergy (needs both sources)
+        tot = red + u1 + u2 + syn                    # (U,) == mij up to rounding (consistency)
+
+        # nats -> bits, then stash this timestep's row for each quantity
+        for k, v in zip(keys, [red, u1, u2, syn, mi1, mi2, mij.expand(U), tot]):
+            out[k][ti] = (v * NATS_TO_BITS).cpu().numpy()
+
+    # --- 7. shape the return: (U,) for one timestep, (T, U) for all ---------- #
+    if single:                                       # single timestep -> drop the length-1 time axis
+        return {k: out[k][0] for k in keys}          # each value shape (U,)
+    return {k: out[k] for k in keys}                 # each value shape (T, U)
+
+
