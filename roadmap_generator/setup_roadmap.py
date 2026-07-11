@@ -9,7 +9,7 @@ Run this ONCE. It creates, in your repo / user account:
   - ~34 issues (tasks) with notes, each added to the project with all field values set
 
 It CANNOT create the view tabs (Roadmap / Board / Table) — GitHub's API has no
-mutation for views. After running, follow SETUP_INSTRUCTIONS.md (~5 min of clicks).
+mutation for views. After running, follow SETUP_INSTRUCTIONS.md (5 min of clicks).
 Re-running is safe-ish: it skips labels/milestones/issues/fields that already exist.
 
 USAGE
@@ -19,11 +19,11 @@ USAGE
      - Scopes: tick  [x] repo   and   [x] project
 2. Run:
     - Paste in terminal: 
-    1st: set GITHUB_TOKEN=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
+    1st: set GITHUB_TOKEN=ghp_49H... (your token)
     Then: python3 setup_roadmap.py
    (or just `python3 setup_roadmap.py` and paste the token when prompted)
 
-Standard library only — no pip install needed.
+Standard library only, no pip install needed.
 """
 
 import os

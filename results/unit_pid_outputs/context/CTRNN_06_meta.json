@@ -1,0 +1,19 @@
+{
+  "array_file": "CTRNN_06.npz",
+  "keys": [
+    "redundancy",
+    "unique1",
+    "unique2",
+    "synergy",
+    "mi_1",
+    "mi_2",
+    "mi_joint",
+    "total"
+  ],
+  "shape_per_key": [
+    100
+  ],
+  "units": "bits",
+  "decision_t": 104,
+  "note": "Gaussian MMI one-to-many PID at DECISION_T: X1 = unit i, X2 = the other units, target = signed cued coherence. Deterministic 1-vs-(U-1) partition (no bipartition averaging). mi_joint = I(all units;Y), identical for every unit."
+}
