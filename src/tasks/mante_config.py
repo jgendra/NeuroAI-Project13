@@ -5,7 +5,7 @@ Central configuration for Mante et al. (2013) dataset generation.
 
 import numpy as np
 
-# Total trial duration = 750ms at dt=1ms means exactly 750 timesteps.
+# Total trial duration = 1150ms at dt=10ms means exactly 115 timesteps.
 TIMING = {
     "fixation": 300,
     "stimulus": 750,
