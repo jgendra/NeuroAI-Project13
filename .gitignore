@@ -3,8 +3,8 @@
 *.npz
 data/
 # Track coherences in results
-!results/stimulus_coherences/**
-!results/stimulus_coherences/
+!results/**
+!results/
 
 # Model weights
 weights/
