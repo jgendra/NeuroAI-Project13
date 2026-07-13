@@ -308,6 +308,27 @@ def compute_decision_accuracy(model, loader, device):
     return correct_total / float(total_total)
 
 
+def compute_test_loss(model, loader, device):
+    """Evaluate average decision-period cross-entropy loss on a test loader."""
+    if loader is None:
+        return float('nan')
+
+    model.eval()
+    losses = []
+
+    with torch.no_grad():
+        for batch in loader:
+            obs, labels, periods, cohs, ctxs = batch
+            obs = obs.to(device)
+            labels = labels.to(device)
+            periods = periods.to(device)
+
+            outputs, _ = model(obs)
+            loss = masked_cross_entropy(outputs, labels, periods)
+            losses.append(loss.item())
+
+    return float(np.mean(losses)) if losses else float('nan')
+
 # ──────────────────────────────────────────────────────────────────────────────
 # Fallback on-the-fly data generator (used when no NPZ provided)
 # ──────────────────────────────────────────────────────────────────────────────
@@ -773,7 +794,7 @@ def main(
             test_path  = os.path.join(data_dir, 'test_uniform.npz')
             # fall back to test.npz if test_uniform.npz doesn't exist
             if not os.path.exists(test_path):
-                test_path = os.path.join(data_dir, 'test.npz')
+                test_path = os.path.join(data_dir, 'test_01.npz')
 
             input_dim = TASKS[task_key]['input_dim']
             loaders[task_key] = {
@@ -806,8 +827,11 @@ def main(
             patience     = patience,
         )
         test_acc = compute_decision_accuracy(model, loaders[task_key]['test'], device)
+        test_loss = compute_test_loss(model, loaders[task_key]['test'], device)
         history['test_acc'] = test_acc
+        history['test_loss'] = test_loss
         print(f"  Test decision accuracy: {test_acc:.3f}")
+        print(f"  Test loss: {test_loss:.3f}")
         models[task_key]    = model
         histories[task_key] = history
 
@@ -880,7 +904,7 @@ def main(
             obs_pad = np.zeros((n_test_trials, max_T, F), dtype=np.float32)
             gt_pad  = np.zeros((n_test_trials, max_T), dtype=np.int64)
             per_pad = np.zeros((n_test_trials, max_T), dtype=np.int8)
-            for i, (ob, gt, per) in enumezrate(zip(obs_l, gt_l, per_l)):
+            for i, (ob, gt, per) in enumerate(zip(obs_l, gt_l, per_l)):
                 T = ob.shape[0]
                 obs_pad[i, :T] = ob
                 gt_pad[i,  :T] = gt
@@ -929,6 +953,7 @@ def main(
         save_dict[f'{task_key}_{hidden_size}_val_loss']   = np.array(history['val_loss'])
         save_dict[f'{task_key}_{hidden_size}_train_acc']  = np.array(history['train_acc'])
         save_dict[f'{task_key}_{hidden_size}_val_acc']    = np.array(history['val_acc'])
+        save_dict[f'{task_key}_{hidden_size}_test_loss']   = np.array(history['test_loss'])
         save_dict[f'{task_key}_{hidden_size}_test_acc']   = np.array(history['test_acc'])
 
     np.savez_compressed(str(npz_path), **save_dict)
