@@ -1,0 +1,43 @@
+test,task,atom,n,statistic,p_value,bonferroni_factor,pass_normality,context_mean,context_sd,family,metric,p_value_bonferroni,perceptual_mean,perceptual_sd,seed,significant,unit
+Mann-Whitney U (context vs perceptual) @ DECISION_T,context_vs_perceptual,norm_redundancy,10,1.0,0.00024612812790522973,4,,0.9832132320274175,0.002654289569790453,comparison_normalized,,0.000984512511620919,0.9891454430322556,0.0012657517886960762,,True,
+Mann-Whitney U (context vs perceptual) @ DECISION_T,context_vs_perceptual,norm_synergy,10,99.0,0.00024612812790522973,4,,0.013833395685355854,0.0022168887440027975,comparison_normalized,,0.000984512511620919,0.00866106974925947,0.0010433081164361964,,True,
+Mann-Whitney U (context vs perceptual) @ DECISION_T,context_vs_perceptual,norm_unique,10,88.0,0.004586392080253494,2,,0.002953372287226628,0.00047341325858474997,magnitude_normalized,,0.009172784160506988,0.0021934872184848414,0.0005152299989476812,,True,
+Mann-Whitney U (context vs perceptual) @ DECISION_T,context_vs_perceptual,norm_unique1,10,88.0,0.004586392080253494,4,,0.0015229403639865128,0.0003376645432328494,comparison_normalized,,0.018345568321013975,0.0010875788081281435,0.0002935144713138629,,True,
+Mann-Whitney U (context vs perceptual) @ DECISION_T,context_vs_perceptual,norm_unique2,10,85.0,0.009108496398030963,4,,0.0014304319232401148,0.0002128060438472774,comparison_normalized,,0.03643398559212385,0.0011059084103566986,0.0002530069343795782,,True,
+Mann-Whitney U (context vs perceptual) @ DECISION_T,context_vs_perceptual,redundancy,10,100.0,0.00018267179110955002,4,,1.2641150179864895,0.02124018227713285,comparison,,0.0007306871644382001,0.757851896060745,0.016684824185023546,,True,
+Mann-Whitney U (context vs perceptual) @ DECISION_T,context_vs_perceptual,synergy,10,100.0,0.00018267179110955002,4,,0.017791199905259604,0.0029193809402885454,comparison,,0.0007306871644382001,0.006640350031623792,0.0008634746685050364,,True,
+Mann-Whitney U (context vs perceptual) @ DECISION_T,context_vs_perceptual,total_mi,10,100.0,0.00018267179110955002,1,,1.2857052834231244,0.021819950952331874,magnitude,,0.00018267179110955002,0.7661760999166092,0.01722432975571548,,True,
+Mann-Whitney U (context vs perceptual) @ DECISION_T,context_vs_perceptual,unique1,10,100.0,0.00018267179110955002,4,,0.0019611149816804213,0.00045657116057307834,comparison,,0.0007306871644382001,0.0008350768352851616,0.0002326008003420919,,True,
+Mann-Whitney U (context vs perceptual) @ DECISION_T,context_vs_perceptual,unique2,10,100.0,0.00018267179110955002,4,,0.001837950549694823,0.00026609617375868085,comparison,,0.0007306871644382001,0.0008487769889552183,0.00020288357420657427,,True,
+Mann-Whitney U (context vs perceptual),,,10,40.0,0.47267559351158717,,,,,,test_acc,,,,,False,
+Mann-Whitney U (context vs perceptual),,,10,71.0,0.12122450301291662,,,,,,test_loss,,,,,False,
+Shapiro-Wilk normality (DECISION_T activations),context,,2000,0.7719490447042707,2.391311564141739e-46,20,False,,,,,4.782623128283478e-45,,,CTRNN_05,,2
+Shapiro-Wilk normality (DECISION_T activations),context,,2000,0.9198461422269097,2.4359618955680228e-31,20,False,,,,,4.871923791136046e-30,,,CTRNN_05,,4
+Shapiro-Wilk normality (DECISION_T activations),context,,2000,0.9748741179606756,2.94239920684214e-18,20,False,,,,,5.88479841368428e-17,,,CTRNN_05,,8
+Shapiro-Wilk normality (DECISION_T activations),context,,2000,0.9931696434757268,5.1470977465846304e-08,20,False,,,,,1.0294195493169262e-06,,,CTRNN_05,,18
+Shapiro-Wilk normality (DECISION_T activations),context,,2000,0.9256156577962225,2.1980570583312787e-30,20,False,,,,,4.3961141166625577e-29,,,CTRNN_05,,26
+Shapiro-Wilk normality (DECISION_T activations),context,,2000,0.9896386530801182,8.770710467495376e-11,20,False,,,,,1.7541420934990752e-09,,,CTRNN_05,,30
+Shapiro-Wilk normality (DECISION_T activations),context,,2000,0.9884415108000277,1.3730144494989709e-11,20,False,,,,,2.7460288989979417e-10,,,CTRNN_05,,48
+Shapiro-Wilk normality (DECISION_T activations),context,,2000,0.9848276046635831,9.789803601890978e-14,20,False,,,,,1.9579607203781957e-12,,,CTRNN_05,,59
+Shapiro-Wilk normality (DECISION_T activations),context,,2000,0.9155156584891311,5.062814780702183e-32,20,False,,,,,1.0125629561404365e-30,,,CTRNN_05,,78
+Shapiro-Wilk normality (DECISION_T activations),context,,2000,0.9242463603377508,1.2888182533091564e-30,20,False,,,,,2.577636506618313e-29,,,CTRNN_05,,82
+Shapiro-Wilk normality (DECISION_T activations),perceptual,,2000,0.9325854982552425,3.771676935164878e-29,20,False,,,,,7.543353870329756e-28,,,CTRNN_05,,2
+Shapiro-Wilk normality (DECISION_T activations),perceptual,,2000,0.9859199387360695,3.987902598333424e-13,20,False,,,,,7.975805196666848e-12,,,CTRNN_05,,4
+Shapiro-Wilk normality (DECISION_T activations),perceptual,,2000,0.9070285730253839,2.7754791676570704e-33,20,False,,,,,5.550958335314141e-32,,,CTRNN_05,,8
+Shapiro-Wilk normality (DECISION_T activations),perceptual,,2000,0.7929336361848143,7.801323507334088e-45,20,False,,,,,1.5602647014668177e-43,,,CTRNN_05,,18
+Shapiro-Wilk normality (DECISION_T activations),perceptual,,2000,0.9775718250707996,3.5354013906125806e-17,20,False,,,,,7.070802781225162e-16,,,CTRNN_05,,26
+Shapiro-Wilk normality (DECISION_T activations),perceptual,,2000,0.8641574072141758,1.5719493680787274e-38,20,False,,,,,3.143898736157455e-37,,,CTRNN_05,,30
+Shapiro-Wilk normality (DECISION_T activations),perceptual,,2000,0.975286349655217,4.2480501721949545e-18,20,False,,,,,8.496100344389909e-17,,,CTRNN_05,,48
+Shapiro-Wilk normality (DECISION_T activations),perceptual,,2000,0.7981756266480265,1.9490897733556998e-44,20,False,,,,,3.8981795467113994e-43,,,CTRNN_05,,59
+Shapiro-Wilk normality (DECISION_T activations),perceptual,,2000,0.952884643465075,6.979143084078313e-25,20,False,,,,,1.3958286168156625e-23,,,CTRNN_05,,78
+Shapiro-Wilk normality (DECISION_T activations),perceptual,,2000,0.9893093067295443,5.198876700673969e-11,20,False,,,,,1.0397753401347939e-09,,,CTRNN_05,,82
+Shapiro-Wilk normality,context,redundancy,10,0.9261686343911103,0.4112809546743573,8,True,,,,,1.0,,,,,
+Shapiro-Wilk normality,context,synergy,10,0.9466823957673373,0.6294466435510179,8,True,,,,,1.0,,,,,
+Shapiro-Wilk normality,context,total_mi,10,0.9478775026204662,0.6434603008331271,1,True,,,,,0.6434603008331271,,,,,
+Shapiro-Wilk normality,context,unique1,10,0.8009347818244001,0.014882758460893125,8,True,,,,,0.119062067687145,,,,,
+Shapiro-Wilk normality,context,unique2,10,0.8966025719990849,0.20098014804087477,8,True,,,,,1.0,,,,,
+Shapiro-Wilk normality,perceptual,redundancy,10,0.8175911178877256,0.02369742866239268,8,True,,,,,0.18957942929914143,,,,,
+Shapiro-Wilk normality,perceptual,synergy,10,0.858814263199,0.07388954212431571,8,True,,,,,0.5911163369945257,,,,,
+Shapiro-Wilk normality,perceptual,total_mi,10,0.819625665166434,0.02507926696925596,1,False,,,,,0.02507926696925596,,,,,
+Shapiro-Wilk normality,perceptual,unique1,10,0.9060384879515353,0.2548725182315986,8,True,,,,,1.0,,,,,
+Shapiro-Wilk normality,perceptual,unique2,10,0.8228128964463575,0.02740558934076622,8,True,,,,,0.21924471472612975,,,,,
