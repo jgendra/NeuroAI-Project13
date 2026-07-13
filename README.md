@@ -11,28 +11,29 @@ This project tests whether cognitive integration demands shape how information i
 ## 2. Repository structure
 ```text
 NeuroAI-Project13/
-├── README.md                # Project overview and instructions
-├── technical_note.md        # Scientific motivation, hypotheses, detailed methodology, and limitations
-├── environment.yml          # Pinned conda environment
-├── requirements.txt         # Pip dependencies
-├── pyproject.toml           # Project module configuration
-├── notebooks/               # Main codebase for execution and analysis
-│   ├── 01_dataset_generation.ipynb   # Generates NeuroGym splits and stimulus coherences
-│   ├── 02_model_training.ipynb       # CTRNN training loops and performance tracking
-│   ├── 03_pid_analysis.ipynb         # Information decomposition (MMI-PID) algorithms
-│   ├── ctrnn_vs_elman.ipynb          # Architectural comparison experiments
-│   └── size_comparison.ipynb         # Hidden-size capacity experiments
-├── src/                     # Helper modules, model definitions, and task wrappers
-│   ├── analysis/            # Gaussian PID analysis, tests, and figure generation
-│   ├── models/              # Model definitions
-│   ├── tasks/               # NeuroGym task wrappers and data generation pipeline
+├── README.md                       # Project overview and instructions
+├── technical_note.md               # Scientific motivation, hypotheses, detailed methodology, and limitations
+├── environment.yml                 # Pinned conda environment
+├── requirements.txt                # Pip dependencies
+├── pyproject.toml                  # Project module configuration
+├── notebooks/                      # Main codebase for execution and analysis
+│   ├── 01_neurogym_datasets.ipynb      # Generates NeuroGym splits and stimulus coherences
+│   ├── 02_train_pipeline.ipynb         # CTRNN training loops and performance tracking
+│   ├── 03_PID_analysis_pipeline.ipynb  # Information decomposition (MMI-PID) algorithms
+│   └── 04_PID_bipartitions.ipynb       # Exploring number of random bipartition splits for PID
+├── src/                            # Helper modules, model definitions, and task wrappers
+│   ├── analysis/                   # Gaussian PID analysis, tests, and figure generation
+│   ├── models/                     # Model definitions
+│   ├── tasks/                      # NeuroGym task wrappers and data generation pipeline
 ├── results/                 
-│   ├── stimulus_coherences/ # Manually saved coherence arrays for PID analysis
-│   ├── model_weights/       # Saved .pt checkpoint files per seed
-│   ├── model_activations/   # Hidden state tensors per seed/trial
-│   ├── metrics/             # Training losses and accuracy logs
-│   └── pid_outputs/         # Saved PID atom arrays (Redundancy, Synergy, Unique)
-└── figures/                 # Generated plots for the presentation and technical note
+│   ├── stimulus_coherences/        # Manually saved coherence arrays for PID analysis
+│   ├── model_weights/              # Saved .pt checkpoint files per seed
+│   ├── model_activations/          # Hidden state tensors per seed/trial
+│   ├── metrics/                    # Training losses and accuracy logs
+│   └── pid_outputs/                # Saved PID atom arrays (Redundancy, Synergy, Unique)
+├── figures/                        # Generated plots for the presentation and technical note
+├── elman_vs_ctrnn_comparison/      # Architectural comparison experiments
+└── size_comparison/                # Hidden-size capacity experiments
 ```
 
 Directory Details:
@@ -74,21 +75,38 @@ pip install -e .
 
 ### Execution & Figure Generation
 
-0. **Dataset generation:** 
-    - The datasets have to be generated to use the notebooks. They are pre-configured in `src/tasks/mante_config.py` and will be saved into the relative `data/[task]` directory. 
-    - To reproduce our results run `python src/tasks/data_generator.py --mode context` and `python src/tasks/data_generator.py --mode perceptual`. 
-    - If you use the provided model weights (without retraining) one can ommit the train and validation set generation by providing the extra parameters `--n_train 0 --n_val 0`. For further details have a look at `src/tasks/README_data.md`.
+1. **Dataset generation:** 
+    - The datasets have to be generated to use the notebooks. They are pre-configured in `src/tasks/mante_config.py` and will be saved into the relative `data/[task]` directory.
+    - Notebook `notebooks/01_neurogym_datasets.ipynb` walks through the dataset generation and shows what the actual data looks like- 
+    - Alternative to reproduce our results run `python src/tasks/data_generator.py --mode context` and `python src/tasks/data_generator.py --mode perceptual`. 
+    - If you use the provided model weights (without retraining) one can ommit the train and validation set generation by providing the extra parameters `--n_train 0 --n_val 0`. 
+    - For further details have a look at `src/tasks/README.md`.
     - Outputs: used configuration, train, val, and by default 10 different test sets to `data/`
-1. **Train the models:** 
-    - Run the full sweep (20 RNNs) via notebook `notebooks/05_Full_train_pipeline.ipynb`. The weights will be saved to `results/model_weights/[task]` and are already delivered as pre-computed. 
+2. **Train the models:** 
+    - Run the full sweep (20 RNNs) via notebook `notebooks/02_train_pipeline.ipynb`. The weights will be saved to `results/model_weights/[task]` and are already delivered as pre-computed. 
     - Outputs: losses and accuracies to `results/accuracies_n_losses/`, weights to `results/model_weights/`, activations to `results/model_activations/`
     - *(Expected runtime: ~2 hours on a standard GPU).*
-2. **Compute PID:** 
-    - Extract information metrics via notebook `notebooks/06_Full_PID_analysis_pipeline.ipynb`. 
+3. **Compute PID:** 
+    - Extract information metrics via notebook `notebooks/03_PID_analysis_pipeline.ipynb`. 
     - Outputs: PID metrics to `results/pid_outputs`
     - *(Expected runtime: ~10 minute on CPU, <1 minute on GPU).*
-3. **Generate Figures:** 
-    - Notebooks `notebooks/05_Full_train_pipeline.ipynb` and `notebooks/06_Full_PID_analysis_pipeline.ipynb` will populate the `figures/` directory with the exact plots used in our final presentation, together with a summary of all statistical test results `stats_summary.csv`.
+4. **Generate Figures:** 
+    - Notebooks `notebooks/02_train_pipeline.ipynb` and `notebooks/03_PID_analysis_pipeline.ipynb` will populate the `figures/` directory with the exact plots used in our final presentation, together with a summary of all statistical test results `stats_summary.csv`.
+
+**Additional Experiments:**
+
+5. **Architecture Comparison (Elman RNN vs CTRNN):**
+    - Notebook `elman_vs_ctrnn_comparison/architecture_comparison.ipynb` walks you through the comparison of both model architectures on both NeuroGym tasks.
+    - Additional information and discussion on the results can be found in `technical_note.md`.
+    - Outputs: 4 models, loss histories/plot, and PID plot will be saved to the respective subfolders.
+6. **Hidden Size Comparison:**
+    - Notebook `size_comparison/comparison.ipynb` analyzes the influence of the CTRNNs hidden size onto the accuraccy and PID information geometry.
+    - Detailed explanation can be found in `size_comparison/README.md` and discussion of the results can be found in `technical_note.md`.
+    - Outputs: loss/accuracy metrics, models, and PID results into the `size_comparison/results` folder.
+7. **Number of Bipartitions for PID:**
+    - Notebook `notebooks/04_PID_bipartitions.ipynb` is researching what number of random bipartitions in the gaussian PID calculation yields a good tradeoff between computation speed and standard error.
+    - Further details about this can be found in `technical_note.md`.
+    - Outputs: creates plots of the 4 PID metric (Redundancy, Synergy, Uniqueness 1 and 2) with deviation compared to number of bipartitions
 
 *Note: Please be aware of custom Paths and change them accordingly in your notebooks! Also adapt the Batchsize when training to fit your Hardware!*
 
@@ -101,12 +119,12 @@ pip install -e .
 | File / Directory | Description | Main Contributor(s) | Assistant(s) |
 | :--- | :--- | :--- | :--- |
 | `notebooks/01_neurogym_datasets.ipynb`, `src/tasks/` | NeuroGym environment wrappers, data generation & coherence tracking | JP, Harris | - |
-| `notebooks/02_model_training_pipeline.ipynb` | CTRNN training loop and performance logging | Jan, JP | - |
-| `notebooks/03_PID_analysis_pipeline.ipynb`, `src/analysis/` | MMI-PID calculation on hidden states | Jan | - |
-| `elman_vs_ctrnn_comparison/` | Architectural comparison experiments | JP | - |
-| `size_comparison/` | Hidden size capacity experiments | Harris | - |
+| `notebooks/02_train_pipeline.ipynb` | CTRNN training loop and performance logging | Jan, JP | - |
+| `notebooks/03_PID_analysis_pipeline.ipynb`, `notebooks/04_PID_bipartitions.ipynb`, `src/analysis/` | MMI-PID calculation on hidden states | Jan | - |
+| `elman_vs_ctrnn_comparison/*` | Architectural comparison experiments | JP | - |
+| `size_comparison/*` | Hidden size capacity experiments | Harris | - |
 | `src/models/` | Elman RNN/CTRNN class definitions | JP | Harris, Jan |
-| `technical_note.md` | Scientific write-up and methodology | All | All |
+| `technical_note.md` | Scientific write-up and methodology | All | - |
 
 ## 5. Documentation of LLM Usage
-We used Claude Code **VERSION**, Github Copilot **VERSION**, **ChatGPT???** , and Gemini 1.5 Pro to assist in writing and debugging training and PID pipelines, troubleshooting compatibility issues with NeuroGym environments, generating boilerplate plotting code for matplotlib, and commenting scripts. All theoretical interpretations, mathematical derivations of the PID targets, and final code structuring were driven by the authors or based on references.
+We used Claude Opus 4.8 / Sonnet 5, GitHub Copilot, ChatGPT 5.5, and Gemini 3.1 Pro / 3.5 Flash to assist in writing and debugging training and PID pipelines, troubleshooting compatibility issues with NeuroGym environments, generating boilerplate plotting code for matplotlib, and commenting scripts. All theoretical interpretations, mathematical derivations of the PID targets, and final code structuring were driven by the authors or based on references.
