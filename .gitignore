@@ -2,9 +2,11 @@
 # Generated Data
 *.npz
 data/
-# Track coherences in results
+# Track results and figures
 !results/**
 !results/
+!figures/**
+!figures/
 
 # Model weights
 weights/
