@@ -34,7 +34,8 @@ NeuroAI-Project13/
 |   └── unit_PID_outputs/           # Saved unit-to-all PID atom arrays (Redundancy, Synergy, Unique)
 ├── figures/                        # Generated plots for the presentation and technical note
 ├── elman_vs_ctrnn_comparison/      # Architectural comparison experiments
-└── size_comparison/                # Hidden-size capacity experiments
+├── size_comparison/                # Hidden-size capacity experiments
+└── roadmap_generator/              # Roadmap for project planning and task management
 ```
 
 Directory Details:
