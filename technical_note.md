@@ -28,27 +28,6 @@ We hypothesize that the PID profile of a task-trained RNN at the end of the stim
 
 ## 2. Methodology
 
-### 2.1 Experimental Design
-We train artificial neural networks on the two tasks described by Mante et al. (2013) using the NeuroGym framework:
-* **Perceptual Task (`ContextDecisionMaking-v0` masked):** Low integration demand. The network accumulates a single evidence stream.
-* **Context Task (`ContextDecisionMaking-v0`):** High integration demand. The network must use a context cue to selectively integrate one of two conflicting sensory streams.
-* **Training Objective:** All networks are trained using a standard supervised Cross-Entropy loss on the final decision period.
-
-### 2.2 Network Architecture & Hyperparameters
-To ensure biological plausibility and representational stability, we employ a Continuous-Time RNN (CTRNN):
-
-$$h_{t+\Delta t} = h_t + \frac{\Delta t}{\tau}\Big[-h_t + W_{rec}\tanh(h_t) + W_{in}\,u_t + b\Big]$$
-
-$$y_t = W_{out}\,h_t$$
-
-* **Continuous-Time Dynamics:** We selected a CTRNN over a standard discrete-time Elman RNN. The time constant $\tau = 100$ ms acts as a biological low-pass filter, which is necessary for the network to successfully integrate the high-variance noisy stimulus ($\sigma = 1.0$) rather than tracking instantaneous noise fluctuations of the $\Delta t=10$ ms signal.
-* **Network Parameters:** We use a hidden size of $N=100$. This specific hyperparameter optimizes the balance between successful, stable task convergence and representational analysis.  The network is fully connected without sign constraints (no Dale's law). Training uses BPTT with the Adam optimizer and gradient-norm clipping. 
-
-### 2.3 Information-Theoretic Analysis
-We compute PID on the hidden-state activations $h_t$ using the final discrete decision label as the target variable. To keep the decomposition tractable, units are coarse-grained into two functional subpopulations. Inference uses permutation tests (shuffling condition labels to build the null) and bootstrap confidence intervals, with Cohen's $d$ effect sizes.
-
-## 2. Methodology
-
 ### 2.1 Task Design and Dataset Generation
 
 The experimental tasks are modeled after the context-dependent decision-making paradigm by Mante et al. (2013) and are generated using the NeuroGym framework. Each trial is structured into three distinct temporal phases:
@@ -62,7 +41,7 @@ To investigate the impact of integration demands, we utilize two task variants:
 * **Perceptual Task (Low Integration)(`ContextDecisionMaking-v0` masked):** The network receives a single stream of noisy evidence (e.g., motion direction) and must output the correct choice. Distractor channels are actively masked out.
 * **Context Task (High Integration)(`ContextDecisionMaking-v0`):** The network receives four noisy stimulus channels (e.g., motion left/right, color red/blue) along with two context channels. The network must use the context cue to selectively attend to the relevant stimulus pair and actively ignore the conflicting distractor pair.
 
-The data generation pipeline constructs a large-scale training and validation set consisting of 160,000 training trials and 2,000 validation trials. Additionally, 10 distinct test sets of 2,000 trials each are generated for subsequent PID analysis. The raw simulation steps from Mante et al. (2013) operate at a 1 millisecond resolution to match their experimental setup. We sample to an effective 10 millisecond timestep to maintain sequence lengths suitable for efficient training.
+The data generation pipeline constructs a large-scale training and validation set consisting of 160,000 training trials and 2,000 validation trials. Additionally, 10 distinct test sets of 2,000 trials each are generated for subsequent PID analysis. The raw simulation steps from Mante et al. (2013) operate at a 1 millisecond resolution to match their experimental setup. We sample at an effective 10 millisecond timestep to maintain sequence lengths suitable for efficient training.
 
 ### 2.2 Model Architectures
 
@@ -121,9 +100,9 @@ A dedicated bipartition-split convergence experiment verified that aggregating a
 
 These theoretical frameworks and methodological choices are implemented through the following analytical pipeline:
 
-* **Trial Generation and Forward Pass:** For each of the 10 independently trained CTRNNs (seeds), the corresponding test set of 2000 trials with independent draws of noise and stimulus coherence is loaded. The network weights are frozen, and the hidden state activations $h(t)$ are collected across all timesteps.
+* **Trial Generation and Forward Pass:** For each of the 10 independently trained CTRNNs (seeds), the corresponding test set of 2000 trials with independent draws of noise and stimulus coherence is loaded. The network weights are frozen, and the hidden state activations $h(t)$ are collected across all timesteps. We chose 2000 trials because a sample covariance matrix estimated from n observations (i.e., trials) of a p-dimensional vector is only full rank, and hence only invertible and usable for a log-determinant, when n > p. Our own calibration showed that n/p = 10 is where PID bias and variance shrink to a small fraction of the true effect size, so with p = 101 we use roughly twice that ratio (n/p $\approx$ 20) as a safety margin.
 * **Data Extraction:** A single snapshot at  timestep $t^*$ is taken. This yields an activation matrix of size $2000 \times 100$ (trials $\times$ units) and a corresponding target vector containing the clean stimulus coherence for each trial (size $2000$).
-* **Joint Covariance and Gaussian Approximation:** The activation matrix and target vector are stacked and standardized to build a joint covariance matrix $\Sigma$.
+* **Joint Covariance and Gaussian Approximation:** The activation matrix and target vector are stacked and standardized to build a joint covariance matrix $\Sigma$ (101 x 101 matrix).
 * **Random Bipartitions:** The 100 hidden units are randomly split into two equal halves of 50 units each. This process is repeated for 200 distinct splits to account for partition sensitivity.
 * **Information Computation:** For each split, MI is calculated directly from the sub-blocks of the covariance matrix $\Sigma$ using the log-determinant formula: $$I(X_1;Y) = \frac{1}{2}[\log\det(\Sigma_{X_1}) + \log\det(\Sigma_Y) - \log\det(\Sigma_{X_1Y})]$$. 
     From these values, the MMI atoms (Redundancy, Unique Information, and Synergy) are computed.
