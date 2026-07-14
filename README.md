@@ -29,8 +29,9 @@ NeuroAI-Project13/
 │   ├── stimulus_coherences/        # Manually saved coherence arrays for PID analysis
 │   ├── model_weights/              # Saved .pt checkpoint files per seed
 │   ├── model_activations/          # Hidden state tensors per seed/trial
-│   ├── metrics/                    # Training losses and accuracy logs
-│   └── pid_outputs/                # Saved PID atom arrays (Redundancy, Synergy, Unique)
+│   ├── accuracies_n_losses/        # Training losses and accuracy logs
+│   ├── pid_outputs/                # Saved PID atom arrays (Redundancy, Synergy, Unique)
+|   └── unit_PID_outputs/           # Saved unit-to-all PID atom arrays (Redundancy, Synergy, Unique)
 ├── figures/                        # Generated plots for the presentation and technical note
 ├── elman_vs_ctrnn_comparison/      # Architectural comparison experiments
 └── size_comparison/                # Hidden-size capacity experiments
