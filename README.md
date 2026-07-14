@@ -1,6 +1,6 @@
 # Information Decomposition in Task-Trained RNNs
 
-![status](https://img.shields.io/badge/status-in%20progress-yellow)
+![status](https://img.shields.io/badge/status-completed-success)
 ![python](https://img.shields.io/badge/python-3.11-blue)
 ![framework](https://img.shields.io/badge/framework-PyTorch-ee4c2c)
 
