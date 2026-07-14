@@ -8,7 +8,7 @@ Previously, Mante et al. (2013) studied context-dependent decision-making in the
 
 Bringing these two perspectives together, we aim to answer the primary research question: **Does the high integration demand of context information lead to synergy in neural representations?**
 
-### Background: Partial Information Decomposition (PID)
+### Background: Partial Information Decomposition
 Classical information-theoretic measures, such as mutual information (MI) or Fisher information, quantify *how much* information a neural network carries in total, but not *how that information is distributed* across its units. 
 
 Partial Information Decomposition (PID) addresses this gap. It takes the total mutual information that two sources, $X_1$ and $X_2$ (e.g., two different sets of neurons in the RNN), jointly carry about an input stimulus $Y$, denoted as $I(X_1, X_2 ; Y)$, and separates it into:
@@ -58,26 +58,26 @@ We computed Time-resolved PID for the Elman RNN and the CTRNN in both tasks, alo
 
 * **Training loss:** 
 ![RNN Training Curves](elman_vs_ctrnn_comparison\figures\elman_vs_ctrnn_learning_curves.png)
-The Elman RNN's loss stays high at around 0.7 in both tasks, versus roughly 0.26 for the CTRNN. More important, using the fact that we have a Cross Entropy Loss and $-\log(0.5)\approx 0.69$ the Elman RNN learned only to not predict the fixation signal and is guessing the actual stimulus. At the matched size of 100 hidden units the Elman RNN cannot learn any of the tasks while CTRNN is able to.
+The Elman RNN's loss stays high at around 0.7 in both tasks, versus roughly 0.26 for the CTRNN. More importantly, given that the Elman RNN uses Cross-Entropy Loss and $-\log(0.5)\approx 0.69$, this means it only learned to not predict the fixation signal and was guessing the actual stimulus. At the matched size of 100 hidden units, the Elman RNN cannot learn any of the tasks, while CTRNN is able to.
 * **Time-resolved PID:** 
 ![RNN PID Geometries](elman_vs_ctrnn_comparison\figures\elman_vs_ctrnn_pid_geometry.png)
-The Elman RNN's total MI is very low and similar accross tasks. It barely accumulates information after stimulus onset and the total MI does not peak at decision time. 
+The Elman RNN's total MI is remarkably lower than the CTRNN and similar across tasks. It barely accumulates information after stimulus onset, and the total MI does not peak at decision time.
 * **Results:**
-The most likely cause is that a vanilla tanh Elman cell trained with backpropagation through time (BPTT) suffers vanishing gradients over the roughly 1050 ms fixation-plus-stimulus horizon, so it cannot maintain the evidence long enough to decide. The CTRNN behaves as predicted: information accumulates during the stimulus, peaks at decision time in both tasks, and total MI is higher in CDM (above 1.2 bits) than in PDM (close to 0.8 bits).
+The most likely cause is that a vanilla tanh Elman cell trained with backpropagation through time (BPTT) suffers vanishing gradients over the roughly 1050 ms fixation-plus-stimulus horizon, so it cannot maintain the evidence long enough to decide. Meanwhile, the CTRNN behaves as predicted: information accumulates during the stimulus, peaks at decision time in both tasks, and total MI is higher in context decision-making (CDM) (above 1.2 bits) than in perceptual decision-making (PDM) (close to 0.8 bits). This justifies the CTRNN not as a main result but as a methodological choice, consistent with our aim of reproducing Mante et al. (2013).
 
 ### 3.2 Impact of Hidden Size on Capacity and Information
 **Question 1:**
 At what network size does the RNN represent a stable, near-maximum amount of stimulus information, and is 100 units a defensible choice?
 
 **Approach:**
-For a single seed at each hidden size (2, 4, 8, 12, 16, 20, 40, 60, 80, 100, 150, 200 units), we computed the Partial Information Decomposition (PID) atoms at decision time (the last timestep of the stimulus period) with signed coherence as the target, and plotted their sum (total MI) against hidden size, together with the individual atoms. We also plotted test accuracy against hidden size for both the Perceptual Decision Making (PDM) and Context-Dependent Decision Making (CDM) tasks.
+For a single seed at each hidden size (2, 4, 8, 12, 16, 20, 40, 60, 80, 100, 150, 200 units), we computed the PID atoms at decision time (the last timestep of the stimulus period) with signed coherence as the target, and plotted their sum (total MI) against hidden size, together with the individual atoms. We also plotted test accuracy against hidden size for both the Perceptual Decision Making (PDM) and Context-Dependent Decision Making (CDM) tasks.
 
 * **Performance:** 
 ![Size comparison training curves](size_comparison\results\performance_comparison.png)
-While even the smallest size model with 2 hidden units has a better than guessing accuracy the performance rises steeply between 4 and 16 units and plateaus after 40 units near 88%.
+While even the smallest size model with 2 hidden units has a better than guessing accuracy, the performance rises steeply between 4 and 16 units and plateaus after 40 units near 88%.
 * **PID at decision time:**
 ![CDM coherence PID decomposition](size_comparison\results\pid_cdm_coherence_comparison.png)
-Similar to the Accuracy the total MI rises fast in the beginning and is converging after 40 units near 1.29 bits for CDM.
+As with accuracy, total MI rises rapidly at the start and converges after 40 units, near 1.29 bits for CDM.
 * **Result:** 
 This gives a circular-argument-free justification for our operating point: total information saturates well below 100 units, so 100 units sits comfortably on the plateau. We therefore select 100 units because (i) total MI has already converged, (ii) any further change is a slow, near-linear drift rather than a qualitative shift, and (iii) most importantly, it matches the architecture of Mante et al. (2013), whose methodology we set out to reproduce for comparison.
 
@@ -98,7 +98,7 @@ Are the two groups of networks matched in performance, so that a redundancy-syne
 **Approach:**
 Plot per-seed bars of test accuracy (top) and test loss (bottom) for the 10 CDM and 10 PDM networks, with an MWU test between tasks mirroring the structure of the main PID comparison.
 
-* **Accuracy and Loss accross Tasks and Models (Result):**
+* **Accuracy and Loss across Tasks and Models (Result):**
 ![Test accuracy loss bars](figures\accuracy_loss\test_accuracy_loss_bars.png)
 Mean CDM accuracy is 0.885 with standard deviation (SD) = 0.005, and mean PDM accuracy lies at 0.887 with SD = 0.005. CDM loss is 0.261 with SD 0.009, while PDM loss is 0.256 with SD = 0.008. Under an independent MWU test, CDM and PDM CTRNNs reach statistically indistinguishable test accuracy and loss, so any downstream PID difference cannot be attributed to one task simply being learned better.
 
