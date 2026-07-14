@@ -139,10 +139,10 @@ Is a discrete Elman cell sufficient, or is the leaky CTRNN needed to reproduce t
 We computed Time-resolved PID for the Elman RNN and the CTRNN in both tasks, alongside the training and validation loss curves.
 
 * **Training loss:** \
-![RNN Training Curves](elman_vs_ctrnn_comparison\figures\elman_vs_ctrnn_learning_curves.png)
+![RNN Training Curves](elman_vs_ctrnn_comparison/figures/elman_vs_ctrnn_learning_curves.png)
 The Elman RNN's loss stays high at around 0.7 in both tasks, versus roughly 0.26 for the CTRNN. More importantly, given that the Elman RNN uses Cross-Entropy Loss and $-\log(0.5)\approx 0.69$, this means it only learned to not predict the fixation signal and was guessing the actual stimulus. At the matched size of 100 hidden units, the Elman RNN cannot learn any of the tasks, while CTRNN is able to.
 * **Time-resolved PID:** \
-![RNN PID Geometries](elman_vs_ctrnn_comparison\figures\elman_vs_ctrnn_pid_geometry.png)
+![RNN PID Geometries](elman_vs_ctrnn_comparison/figures/elman_vs_ctrnn_pid_geometry.png)
 The Elman RNN's total MI is remarkably lower than the CTRNN and similar across tasks. It barely accumulates information after stimulus onset, and the total MI does not peak at decision time.
 * **Results:**
 The most likely cause is that a vanilla tanh Elman cell trained with backpropagation through time (BPTT) suffers vanishing gradients over the roughly 1050 ms fixation-plus-stimulus horizon, so it cannot maintain the evidence long enough to decide. Meanwhile, the CTRNN behaves as predicted: information accumulates during the stimulus, peaks at decision time in both tasks, and total MI is higher in context decision-making (CDM) (above 1.2 bits) than in perceptual decision-making (PDM) (close to 0.8 bits). This justifies the CTRNN not as a main result but as a methodological choice, consistent with our aim of reproducing Mante et al. (2013).
@@ -155,8 +155,8 @@ At what network size does the RNN represent a stable, near-maximum amount of sti
 For a single seed at each hidden size (2, 4, 8, 12, 16, 20, 40, 60, 80, 100, 150, 200 units), we computed the PID atoms at decision time (the last timestep of the stimulus period) with signed coherence as the target, and plotted their sum (total MI) against hidden size together with the test accuracy and inverted loss ($1 - L$) for both the Perceptual Decision Making (PDM) and Context-Dependent Decision Making (CDM) tasks.
 
 * **Performance and total MI at Decision time:** \
-![PDM accuracy, loss and total MI comparison](size_comparison\results\pdm_metrics_comparison.png)
-![CDM accuracy, loss and total MI comparison](size_comparison\results\cdm_metrics_comparison.png)
+![PDM accuracy, loss and total MI comparison](size_comparison/results/pdm_metrics_comparison.png)
+![CDM accuracy, loss and total MI comparison](size_comparison/results/cdm_metrics_comparison.png)
 While even the smallest size model with 2 hidden units has a better than guessing accuracy, the performance rises steeply between 4 and 16 units and plateaus after 40 units near 88%.
 As with accuracy, total MI rises rapidly at the start and converges after 40 units, near 1.29 bits for CDM.
 * **Result:** 
@@ -169,7 +169,7 @@ Is the redundancy-synergy difference between tasks specific to 100-unit networks
 For each task and each hidden size, we computed the normalized quantity (redundancy minus synergy) divided by total MI at decision time, and plotted it against hidden size for CDM and PDM.
 
 * **Redundancy-Synergy balance (Result):** \
-![(redundancy-synergy)/total vs RNN size](size_comparison\results\redundancy_synergy_balance_comparison.png)
+![(redundancy-synergy)/total vs RNN size](size_comparison/results/redundancy_synergy_balance_comparison.png)
 Once total MI, accuracy, and loss have converged (by roughly 40 units), the normalized redundancy-minus-synergy value is systematically lower for CDM than for PDM across the tested sizes, mirroring the 100-unit result: as integration demand rises, synergy increases and redundancy decreases as a fraction of total information. The ordering breaks only at 60 units, where PDM is higher, which we attribute to sampling noise. Because this analysis uses a single seed per size, it is suggestive rather than statistical, and averaging across seeds at each size would be needed to establish it firmly (see Limitations).
 
 ### 3.3 PID Profiles: Cognitive Demand and Training Objectives (Main Analysis)
@@ -180,7 +180,7 @@ Are the two groups of networks matched in performance, so that a redundancy-syne
 Plot per-seed bars of test accuracy (top) and test loss (bottom) for the 10 CDM and 10 PDM networks, with an MWU test between tasks mirroring the structure of the main PID comparison.
 
 * **Accuracy and Loss across Tasks and Models (Result):** \
-![Test accuracy loss bars](figures\accuracy_loss\test_accuracy_loss_bars.png)
+![Test accuracy loss bars](figures/accuracy_loss/test_accuracy_loss_bars.png)
 Mean CDM accuracy is 0.885 with standard deviation (SD) = 0.005, and mean PDM accuracy lies at 0.887 with SD = 0.005. CDM loss is 0.261 with SD 0.009, while PDM loss is 0.256 with SD = 0.008. Under an independent MWU test, CDM and PDM CTRNNs reach statistically indistinguishable test accuracy and loss, so any downstream PID difference cannot be attributed to one task simply being learned better.
 
 **Question 2:**
@@ -190,7 +190,7 @@ Are the PID time courses stable across seeds, and does the peak at decision time
 Calculate and plot mean PID atom across the 10 seeds per task at every timestep, shading the atom’s SD band around the mean timecourse for CDM (right) and PDM (left) separately. A blue (CDM) and red (PDM) shaded area covers the duration of the stimulus period, between fixation and decision period.
 
 * **Mean PID at every Timestep (Result):** \
-![Mean PID at every Timestep](figures\mean_all_time_pid\mean_all_time_pid.png)
+![Mean PID at every Timestep](figures/mean_all_time_pid/mean_all_time_pid.png)
 Total MI stays near zero during fixation, begins to accumulate immediately after stimulus onset, and peaks just before the decision, which is precisely where synergy and redundancy also peak. This confirms that decision time is where the network has accumulated the full evidence and is the correct point to characterize the information structure required for the choice. After decision time, on average, synergy decreases and redundancy increases while total MI plateaus and then slowly declines, consistent with the network only needing to sustain the already-made decision (a simpler quantity that can be held redundantly in parallel) and then resetting for the next trial. \
 At decision time, CDM total MI (about 1.29 bits) is higher than PDM (about 0.77 bits), which is close to twice the PDM total MI: the PID target is a single scalar (i.e., the cued signed coherence) in both tasks, so this is not exactly "twice the information from two streams." Rather, CDM networks maintain a richer, higher-dimensional representation (the cued stream, the distractor stream, and the context cue) even though only the cued stream determines the target, which raises the total MI decodable about the cued coherence. Because this magnitude difference is large, synergy appearing higher in CDM in the raw time course cannot by itself confirm Prediction 2; the atoms must first be normalized by each network's total MI.
 
@@ -201,7 +201,7 @@ Is the redundancy-synergy shift between CDM and PDM statistically reliable acros
 For each atom at decision time, we extracted the 10 per-seed values per task and compared CDM versus PDM with a two-sided MWU. We display total MI in bits, and the normalized fractions (redundancy, unique 1, unique 2, synergy) and their sum (total uniqueness) as violin plots, with individual seeds overlaid. To respect the dependency structure of the atoms, we correct in two tiers: the four independent compositional atoms (unique 1, unique 2, redundancy, synergy) form the primary family (Bonferroni k equals 4, corrected alpha 0.0125), while total MI and total uniqueness are deterministic sums of primary-family members and form a separate derived family (k equals 2, corrected alpha 0.025).
 
 * **Normalized PID atoms at decision time:** \
-![Normalized PID at Decision time - violin plot](figures\norm_pid_decision_time\decision_time_pid_norm_violin.png)
+![Normalized PID at Decision time - violin plot](figures/norm_pid_decision_time/decision_time_pid_norm_violin.png)
 Total MI is significantly higher in CDM (CDM mean = 1.286 and SD = 0.022, versus PDM mean = 0.766 and SD = 0.017 bits). Crucially, redundancy dominates the decomposition in both tasks (roughly 98 to 99 percent of total MI), yet after normalization, redundancy is significantly lower in CDM (0.9832 in CDM versus 0.9891 in PDM), and synergy is significantly higher (0.0138 in CDM versus 0.0087 in PDM). \
 The redundancy that is lost in CDM reappears as both synergy and uniqueness. Total uniqueness is significantly higher in CDM, and although unique 1 and unique 2 are each only weakly significant on their own, summing them (justified because the random 50/50 bipartitions make the source labels arbitrary and exchangeable, so only the total unique information is meaningful) yields a stronger, clearly significant increase.
 * **Result:**
@@ -217,7 +217,7 @@ Is the synergistic and unique coding in CDM concentrated in a specialized subpop
 For each seed and task, and for each unit i, we computed the PID with source X1 equal to unit i, source X2 equal to the remaining 99 units, and target equal to the signed cued coherence (a fixed 1-versus-99 partition). We display redundancy, synergy, unit unique (unique 1), and population unique (unique 2) per unit as a heatmap, on both linear and logarithmic color scales.
 
 * **Per Unit PID (Result):** \
-![Log scale per unit PID (CTRNN_05)](figures\unit_pid\heatmap_seeds_P05_C05.png)
+![Log scale per unit PID (CTRNN_05)](figures/unit_pid/heatmap_seeds_P05_C05.png)
 Under Minimum Mutual Information PID (MMI-PID) with a 1-versus-99 partition, a single unit essentially never carries more coherence information than the other 99 combined, so redundancy equals the minimum of the two source MIs, which is the single unit's own MI: Redundant $= \min\{ I(X_1;Y), I(X_2;Y) \} = I(unit; Y)$. Its unique information is therefore forced to zero by construction: Unit Unique $= I(X_1;Y) −$ Red $= 0$. Population unique is what the rest of the network adds beyond that unit: Population Unique $= I(X_2;Y) −$ Red $= I(X_2;Y) − I(X_1;Y)$. Synergy is Syn $=$ Total MI $− I(X_1;Y) − I(X_2;Y) +$ Red $= I(X_1,X_2;Y) − I(X_2;Y) = I(X_1;Y|X_2)$. This last term is near zero, not by algebraic necessity but empirically: the 99-unit population already captures nearly all the decodable coherence, so one extra unit adds almost nothing conditional on the rest. On the logarithmic scale, synergy is small but nonzero and fairly uniform across units, and slightly higher in CDM, consistent with the 50/50 bipartition PID analysis, where synergy is genuinely present and higher in CDM. \
 The interpretable contrast is therefore the redundancy row (how much of the coherence signal a single unit carries) versus the population-unique row (how much the rest of the population adds on top). In PDM, redundancy is high and fairly uniformly distributed across units, while population uniqueness is low and close to zero. This means most units are near-copies of the same accumulated evidence, the fingerprint of redundant parallel coding expected for a single-stream accumulation task. In CDM, the pattern flips: redundancy is lower and sparse across units, while population unique dominates. This indicates that any one unit carries relatively little of the signal alone, and the answer lives in the collective. This is the fingerprint of distributed complementary joint coding expected when the cued coherence depends on combining the context cue with the correct stream. Importantly, both redundancy and synergy change roughly uniformly along the neuron axis. Hence, the shift is spread across essentially the whole population rather than delegated to synergy-specialized subpopulations doing all the integration between input information streams.
 
