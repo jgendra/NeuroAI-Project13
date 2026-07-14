@@ -19,10 +19,10 @@ NeuroAI-Project13/
 ├── notebooks/                      # Main codebase for execution and analysis
 │   ├── 01_neurogym_datasets.ipynb      # Generates NeuroGym splits and stimulus coherences
 │   ├── 02_train_pipeline.ipynb         # CTRNN training loops and performance tracking
-│   ├── 03_PID_analysis_pipeline.ipynb  # Information decomposition (MMI-PID) algorithms
+│   ├── 03_PID_analysis_pipeline.ipynb  # PID computation, statistical analysis, and results figures
 │   └── 04_PID_bipartitions.ipynb       # Exploring number of random bipartition splits for PID
 ├── src/                            # Helper modules, model definitions, and task wrappers
-│   ├── analysis/                   # Gaussian PID analysis, tests, and figure generation
+│   ├── analysis/                   # Gaussian MMI-PID definition and algorithms
 │   ├── models/                     # Model definitions
 │   ├── tasks/                      # NeuroGym task wrappers and data generation pipeline
 ├── results/                 
@@ -79,8 +79,8 @@ pip install -e .
     - The datasets have to be generated to use the notebooks. They are pre-configured in `src/tasks/mante_config.py` and will be saved into the relative `data/[task]` directory.
     - Notebook `notebooks/01_neurogym_datasets.ipynb` walks through the dataset generation and shows what the actual data looks like- 
     - Alternative to reproduce our results run `python src/tasks/data_generator.py --mode context` and `python src/tasks/data_generator.py --mode perceptual`. 
-    - If you use the provided model weights (without retraining) one can ommit the train and validation set generation by providing the extra parameters `--n_train 0 --n_val 0`. 
-    - For further details have a look at `src/tasks/README.md`.
+    - If you use the provided model weights (without retraining), you can omit the train and validation set generation by providing the extra parameters `--n_train 0 --n_val 0`. 
+    - For further details, have a look at `src/tasks/README.md`.
     - Outputs: used configuration, train, val, and by default 10 different test sets to `data/`
 2. **Train the models:** 
     - Run the full sweep (20 RNNs) via notebook `notebooks/02_train_pipeline.ipynb`. The weights will be saved to `results/model_weights/[task]` and are already delivered as pre-computed. 
@@ -89,7 +89,7 @@ pip install -e .
 3. **Compute PID:** 
     - Extract information metrics via notebook `notebooks/03_PID_analysis_pipeline.ipynb`. 
     - Outputs: PID metrics to `results/pid_outputs`
-    - *(Expected runtime: ~10 minute on CPU, <1 minute on GPU).*
+    - *(Expected runtime: ~10 minute on CPU, <2 minute on GPU).*
 4. **Generate Figures:** 
     - Notebooks `notebooks/02_train_pipeline.ipynb` and `notebooks/03_PID_analysis_pipeline.ipynb` will populate the `figures/` directory with the exact plots used in our final presentation, together with a summary of all statistical test results `stats_summary.csv`.
 
@@ -100,27 +100,27 @@ pip install -e .
     - Additional information and discussion on the results can be found in `technical_note.md`.
     - Outputs: 4 models, loss histories/plot, and PID plot will be saved to the respective subfolders.
 6. **Hidden Size Comparison:**
-    - Notebook `size_comparison/comparison.ipynb` analyzes the influence of the CTRNNs hidden size onto the accuraccy and PID information geometry.
+    - Notebook `size_comparison/comparison.ipynb` analyzes the influence of the CTRNNs hidden size on the accuracy and PID information geometry.
     - Detailed explanation can be found in `size_comparison/README.md` and discussion of the results can be found in `technical_note.md`.
     - Outputs: loss/accuracy metrics, models, and PID results into the `size_comparison/results` folder.
 7. **Number of Bipartitions for PID:**
-    - Notebook `notebooks/04_PID_bipartitions.ipynb` is researching what number of random bipartitions in the gaussian PID calculation yields a good tradeoff between computation speed and standard error.
+    - Notebook `notebooks/04_PID_bipartitions.ipynb` studies the number of random bipartitions in the Gaussian PID calculation which yields a good tradeoff between computation speed and standard error.
     - Further details about this can be found in `technical_note.md`.
-    - Outputs: creates plots of the 4 PID metric (Redundancy, Synergy, Uniqueness 1 and 2) with deviation compared to number of bipartitions
+    - Outputs: creates plots of the 4 PID metrics (Redundancy, Synergy, Uniqueness 1 and 2) with deviation compared to the number of bipartitions
 
-*Note: Please be aware of custom Paths and change them accordingly in your notebooks! Also adapt the Batchsize when training to fit your Hardware!*
+*Note: Please be aware of custom Paths and change them accordingly in your notebooks! Also, adapt the batch size when training to fit your Hardware!*
 
 ## 4. Author contributions
 * **Harris** implemented the NeuroGym task wrappers, continuous-time RNN architecture, and researched the networks hiddensize influence.
 * **Jean-Pasqual** finished the data generation pipeline and CTRNN architecture, configured the training pipeline, and conducted the Elman vs. CTRNN performance comparison.
-* **Jan** adapted the training pipeline, wrote the Partial Information Decomposition (PID) code, and analyzed and generated the final information-geometry figures.
+* **Jan** adapted the training pipeline, wrote the Partial Information Decomposition (PID) algorithms, conducted the information-theoretic and statistical analysis, and generated the final information-geometry figures.
 * All authors contributed to the literature review, project planning, experimental design, drafting of the technical note, and preparation of the final presentation slides.
 
 | File / Directory | Description | Main Contributor(s) | Assistant(s) |
 | :--- | :--- | :--- | :--- |
 | `notebooks/01_neurogym_datasets.ipynb`, `src/tasks/` | NeuroGym environment wrappers, data generation & coherence tracking | JP, Harris | - |
 | `notebooks/02_train_pipeline.ipynb` | CTRNN training loop and performance logging | Jan, JP | - |
-| `notebooks/03_PID_analysis_pipeline.ipynb`, `notebooks/04_PID_bipartitions.ipynb`, `src/analysis/` | MMI-PID calculation on hidden states | Jan | - |
+| `notebooks/03_PID_analysis_pipeline.ipynb`, `notebooks/04_PID_bipartitions.ipynb`, `src/analysis/` | PID calculation, analysis & figures | Jan | - |
 | `elman_vs_ctrnn_comparison/*` | Architectural comparison experiments | JP | - |
 | `size_comparison/*` | Hidden size capacity experiments | Harris | - |
 | `src/models/` | Elman RNN/CTRNN class definitions | JP | Harris, Jan |
